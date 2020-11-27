@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from Exposure import calculateExposure
+from .Exposure import calculateExposure
 
 def calculateTransProbability(HSt, HEnd, NbSt, NbEnd):
     aer = 60/5
@@ -10,6 +10,6 @@ def calculateTransProbability(HSt, HEnd, NbSt, NbEnd):
 
 
 if __name__ == '__main__':
-    print(calculateTransProbability(1347848024, 1347851923,1347854480, 1347856307))
-    print(np.random.binomial(1, 0.01))
+    print(calculateTransProbability(1347848024.0,1347851923.0,1347854480.0,1347856307.0))
+
     pass

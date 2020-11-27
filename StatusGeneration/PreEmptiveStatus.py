@@ -71,7 +71,7 @@ class PreEmptiveStatus:
 
 if __name__ == '__main__':
     ###################### FOR DDT NETWORK #############################
-    DDTStatus = PreEmptiveStatus(dataFolder= "../../DenseNetwork",
+    DDTStatus = PreEmptiveStatus(dataFolder= "../Data/SPDTNetwork/DDT",
                                  linkFilePrefix="bclink_",
                                  )
     ################### Generating Initial Status file #################

@@ -30,10 +30,10 @@ def simplifyNetwork(inputFilePathPrefix, outputFilePathPrefix):
         Probability = []
         # Calculate the transmission probability
         for j in range(len(HostSt)):
-            prob = calculateTransProbability(HostSt[i],
-                                             HostEnd[i],
-                                             NbSt[i],
-                                             NbEnd[i]
+            prob = calculateTransProbability(HostSt[j],
+                                             HostEnd[j],
+                                             NbSt[j],
+                                             NbEnd[j]
                                              )
             Probability.append(prob)
             if(j % 1000000 == 0):
@@ -53,7 +53,7 @@ def simplifyNetwork(inputFilePathPrefix, outputFilePathPrefix):
 
 if __name__ == '__main__':
     ##################### Simplify DDT Network #####################
-    simplifyNetwork(inputFilePathPrefix='../../DenseNetwork/bclink_',
-                    outputFilePathPrefix='../SimpleNetwork/DDT/ddtlink_simple_'
+    simplifyNetwork(inputFilePathPrefix='../Data/SPDTNetwork/DDT/bclink_',
+                    outputFilePathPrefix='../Data/SimpleNetwork/DDT/ddtlink_simple_'
                     )
     pass
