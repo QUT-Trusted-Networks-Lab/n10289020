@@ -1,7 +1,7 @@
 ###### This calculates the Exposure
 import numpy as np
 
-def calculateExposure(aer, HSt, HEnd, NbSt, NbEnd):
+def calculateExposure(HSt, HEnd, NbSt, NbEnd):
     a = float(HSt)  ## an individual having disease (infected) arrive in a location. This is the starting time.
     b = float(HEnd)  ## the infected individual left the location
     c = float(NbSt)  ## a sussceptible individual arrived in the same location. This is the arrival time of succeptible
@@ -18,6 +18,7 @@ def calculateExposure(aer, HSt, HEnd, NbSt, NbEnd):
 
     ## These are the constant parameters in the disease model
     ## Thsese are discussed  in my published paper
+    aer = 60 / 5
     g = 0.7  ## particle generation rate in pfu - it is calculated for influenza disease
     q = 9 / (1000 * 60)  ## pulmonary rate -- this for human -- how much air a human inhaled
     v = 3.14 * 20 * 20 * 2  ## volume of the proximity -- this is the volume of air in the proximity - pi*r^2*h - r - radious, h height. It is considered as a cylinder of space.

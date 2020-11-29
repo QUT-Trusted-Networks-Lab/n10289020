@@ -49,11 +49,41 @@ class PreEmptiveStatus:
         UserId = df['UsID'].tolist()
         Status = df['Status'].tolist()
         nToVaccinate = int(proportion * len(UserId))
-        toVaccinateIndex = np.random.choice(len(UserId), nToVaccinate) #Randomly choose
+
+        # ---- This is for RV -------
+        # toVaccinateIndex = np.random.choice(len(UserId), nToVaccinate) #Randomly choose
+        # for i in toVaccinateIndex:
+        #     Status[i] = 'Recovered'
+
+
+        #----- This is for DV -------
+        # Read the contact count csv
+        # contactCount = pd.read_csv('./ContactCount.csv')
+        # nOfVacc = int(proportion * len(Status))
+        # countList = contactCount['UsID'].tolist()
+        #
+        # toVaccList = countList[0:nOfVacc]
+        #
+        # for toVacc in toVaccList:
+        #     index = UserId.index(toVacc)
+        #     Status[index] = 'Recovered'
+
+        #----- This is for IMV -----
+        # Read the ranking file
+        IMVRanking = pd.read_csv('./IMVRank.csv', names=['UsID', 'Rank'])
+        IMVRanking = IMVRanking.sort_values(['Rank'], ascending=False)
+        nOfVacc = int(proportion * len(Status))
+
+        UsList = IMVRanking['UsID'].tolist()
+
+        toVaccList = UsList[0:nOfVacc]
+        for toVacc in toVaccList:
+            index = UserId.index(toVacc)
+            Status[index] = 'Recovered'
+
 
         #Change Status to recover
-        for i in toVaccinateIndex:
-            Status[i] = 'Recovered'
+
 
         #Output data to csv file
         data = {
@@ -79,8 +109,8 @@ if __name__ == '__main__':
 
     ################### Generating Initial Status with RV strategy file #################
     DDTStatus.generateRVStatus(initialStatusFile="./output/Pre-emptive/DDT/initialStatus.csv",
-                               outputFile="./output/Pre-emptive/DDT/RV/initialStatus_noVacc.csv",
-                               proportion = 0 # 0% of the population is vaccinated
+                               outputFile="./output/Pre-emptive/DDT/IMV/initialStatus_1.csv",
+                               proportion = 0.01 # 0% of the population is vaccinated
                                )
     
     pass
