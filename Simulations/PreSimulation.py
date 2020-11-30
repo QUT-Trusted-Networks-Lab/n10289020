@@ -14,7 +14,6 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
                               END_DAY = 32, # Change to simulate at a bigger scale,
                               SIMULATION_ID = 0
                               ):
-    # print(f'Simulation {SIMULATION_ID} begin.')
     StatusDf = pd.read_csv(inputStatusFile)
     Status_UsID = StatusDf['UsID'].tolist()
     Status = StatusDf['Status'].tolist()
@@ -122,14 +121,13 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
     # print(nOfInfection)
     if(nOfInfection > 100):
         node = 1
-    # print(f'Simulation {SIMULATION_ID} finished')
     return [nOfInfection, node]
 
 
 import concurrent.futures
 import time
 import threading
-import multiprocessing
+import multiprocessing as mp
 
 # def singleProcess_10Sim(procnum, return_dict):
 #     NUMBER_OF_SIMULATIONS = 20
@@ -152,6 +150,14 @@ def exclude_random(exclude, range):
     rand = random.randint(0,range)
     return exclude_random(exclude,range) if rand in exclude else rand
 
+result_list = [0,0,0]
+num_sim = 0
+def log_result(result):
+    result_list[2] += 1
+    result_list[0] += result[0]
+    result_list[1] += result[1]
+    print(f'num_simulations = {result_list[2]}, outbreak_size = {result_list[0] / result_list[2]}, num_nodes = {result_list[1]}')
+
 if __name__ == '__main__':
     start = time.perf_counter()
     #---------- Simulation 1: Pre-emptive no Vaccine, 7 days ------------
@@ -160,34 +166,50 @@ if __name__ == '__main__':
     #                          START_DAY = 7,
     #                          END_DAY =32
     #                          ))
+    NUMBER_OF_SIMULATIONS = 1000
+    num_workers = mp.cpu_count()
+    pool = mp.Pool(num_workers)
+    exclude = []
+    for i in range(NUMBER_OF_SIMULATIONS):
+        seedIndex = exclude_random(exclude, 364544)
+        exclude.append(seedIndex)
+        pool.apply_async(runSimulation_PreEmptive, args=('../Data/SPDTNetwork/DDT/bclink_',
+                                                         './Pre-emptive/RV/initialStatus_point2.csv',
+                                                         seedIndex,
+                                                         ), callback=log_result)
 
+
+    pool.close()
+    pool.join()
+    print(f'Pre-emptive (DDT - RV 0.2%):\nAverage outbreak size: {result_list[0] / NUMBER_OF_SIMULATIONS}\n'
+          f'Number of nodes: {result_list[1]}')
     # ---------- Test Threading ------------
     # Pre-emptive: DDT - No Vaccination
-    NUMBER_OF_SIMULATIONS = 1
-    sum_noVacc = 0
-    node_noVacc = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        exclude = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            seedIndex = exclude_random(exclude, 364544)
-            exclude.append(seedIndex)
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                   './Pre-emptive/RV/initialStatus_noVacc.csv',
-                                    0,
-                                   7,
-                                   32,
-                                   i
-                                   ))
-        for f in concurrent.futures.as_completed(results):
-            sum_noVacc += f.result()[0]
-            node_noVacc += f.result()[1]
-    print(f'Pre-emptive (DDT - No Vaccination):\nAverage outbreak size: {sum_noVacc/NUMBER_OF_SIMULATIONS}\nNumber of nodes: {node_noVacc}')
+    #
+    # sum_noVacc = 0
+    # node_noVacc = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     exclude = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         seedIndex = exclude_random(exclude, 364544)
+    #         exclude.append(seedIndex)
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                './Pre-emptive/RV/initialStatus_noVacc.csv',
+    #                                 0,
+    #                                7,
+    #                                32,
+    #                                i
+    #                                ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         sum_noVacc += f.result()[0]
+    #         node_noVacc += f.result()[1]
+    # print(f'Pre-emptive (DDT - No Vaccination):\nAverage outbreak size: {sum_noVacc/NUMBER_OF_SIMULATIONS}\nNumber of nodes: {node_noVacc}')
 
-    # # Pre-emptive: DDT - RV 0.2%
+    # Pre-emptive: DDT - RV 0.2%
     # sum_drv_point2 = 0
     # node_drv_point2 = 0
-    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    # with concurrent.futures.ThreadPoolExecutor(1000) as executor:
     #     results = []
     #     exclude = []
     #     for i in range(NUMBER_OF_SIMULATIONS):
