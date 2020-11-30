@@ -80,7 +80,7 @@ class PreEmptiveStatus:
         for toVacc in toVaccList:
             index = UserId.index(toVacc)
             Status[index] = 'Recovered'
-
+        # ------------------------------------------------
 
         #Change Status to recover
 
