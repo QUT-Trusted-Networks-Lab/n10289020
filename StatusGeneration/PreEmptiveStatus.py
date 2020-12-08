@@ -51,9 +51,9 @@ class PreEmptiveStatus:
         nToVaccinate = int(proportion * len(UserId))
 
         # ---- This is for RV -------
-        # toVaccinateIndex = np.random.choice(len(UserId), nToVaccinate) #Randomly choose
-        # for i in toVaccinateIndex:
-        #     Status[i] = 'Recovered'
+        toVaccinateIndex = np.random.choice(len(UserId), nToVaccinate) #Randomly choose
+        for i in toVaccinateIndex:
+            Status[i] = 'Recovered'
 
 
         #----- This is for DV -------
@@ -70,16 +70,16 @@ class PreEmptiveStatus:
 
         #----- This is for IMV -----
         # Read the ranking file
-        IMVRanking = pd.read_csv('./IMVRank.csv', names=['UsID', 'Rank'])
-        IMVRanking = IMVRanking.sort_values(['Rank'], ascending=False)
-        nOfVacc = int(proportion * len(Status))
-
-        UsList = IMVRanking['UsID'].tolist()
-
-        toVaccList = UsList[0:nOfVacc]
-        for toVacc in toVaccList:
-            index = UserId.index(toVacc)
-            Status[index] = 'Recovered'
+        # IMVRanking = pd.read_csv('./DDT-IMVranking.csv', names=['UsID', 'IMVrank', 'IMEVrank', 'IMTVrank', 'Degree'])
+        # IMVRanking = IMVRanking.sort_values(['IMVrank'], ascending=False)
+        # nOfVacc = int(proportion * len(Status))
+        #
+        # UsList = IMVRanking['UsID'].tolist()
+        #
+        # toVaccList = UsList[0:nOfVacc]
+        # for toVacc in toVaccList:
+        #     index = UserId.index(toVacc)
+        #     Status[index] = 'Recovered'
         # ------------------------------------------------
 
         #Change Status to recover
@@ -109,8 +109,8 @@ if __name__ == '__main__':
 
     ################### Generating Initial Status with RV strategy file #################
     DDTStatus.generateRVStatus(initialStatusFile="./output/Pre-emptive/DDT/initialStatus.csv",
-                               outputFile="./output/Pre-emptive/DDT/IMV/initialStatus_1.csv",
-                               proportion = 0.01 # 0% of the population is vaccinated
+                               outputFile="./output/Pre-emptive/DDT/RV/initialStatus_2.csv",
+                               proportion = 0.02 # % of the population is vaccinated
                                )
     
     pass

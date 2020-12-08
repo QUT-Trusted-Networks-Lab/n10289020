@@ -166,23 +166,23 @@ if __name__ == '__main__':
     #                          START_DAY = 7,
     #                          END_DAY =32
     #                          ))
-    NUMBER_OF_SIMULATIONS = 1000
-    num_workers = mp.cpu_count()
-    pool = mp.Pool(num_workers)
-    exclude = []
-    for i in range(NUMBER_OF_SIMULATIONS):
-        seedIndex = exclude_random(exclude, 364544)
-        exclude.append(seedIndex)
-        pool.apply_async(runSimulation_PreEmptive, args=('../Data/SPDTNetwork/DDT/bclink_',
-                                                         './Pre-emptive/RV/initialStatus_point2.csv',
-                                                         seedIndex,
-                                                         ), callback=log_result)
-
-
-    pool.close()
-    pool.join()
-    print(f'Pre-emptive (DDT - RV 0.2%):\nAverage outbreak size: {result_list[0] / NUMBER_OF_SIMULATIONS}\n'
-          f'Number of nodes: {result_list[1]}')
+    NUMBER_OF_SIMULATIONS = 100
+    # num_workers = mp.cpu_count()
+    # pool = mp.Pool(num_workers)
+    # exclude = []
+    # for i in range(NUMBER_OF_SIMULATIONS):
+    #     seedIndex = exclude_random(exclude, 364544)
+    #     exclude.append(seedIndex)
+    #     pool.apply_async(runSimulation_PreEmptive, args=('../Data/SPDTNetwork/DDT/bclink_',
+    #                                                      './Pre-emptive/RV/initialStatus_point2.csv',
+    #                                                      seedIndex,
+    #                                                      ), callback=log_result)
+    #
+    #
+    # pool.close()
+    # pool.join()
+    # print(f'Pre-emptive (DDT - RV 0.2%):\nAverage outbreak size: {result_list[0] / NUMBER_OF_SIMULATIONS}\n'
+    #       f'Number of nodes: {result_list[1]}')
     # ---------- Test Threading ------------
     # Pre-emptive: DDT - No Vaccination
     #
@@ -273,26 +273,26 @@ if __name__ == '__main__':
     #     f'Pre-emptive (DDT - RV 0.6%):\nAverage outbreak size: {sum_drv_point6 / NUMBER_OF_SIMULATIONS}\nNumber of nodes: {node_drv_point6}')
     #
     # # Pre-emptive: DDT - RV 0.8%
-    # sum_drv_point8 = 0
-    # node_drv_point8 = 0
-    # with concurrent.futures.ThreadPoolExecutor() as executor:
-    #     results = []
-    #     exclude = []
-    #     for i in range(NUMBER_OF_SIMULATIONS):
-    #         seedIndex = exclude_random(exclude, 364544)
-    #         exclude.append(seedIndex)
-    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-    #                                        './Pre-emptive/RV/initialStatus_point8.csv',
-    #                                        seedIndex,
-    #                                        7,
-    #                                        32,
-    #                                        i
-    #                                        ))
-    #     for f in concurrent.futures.as_completed(results):
-    #         sum_drv_point8 += f.result()[0]
-    #         node_drv_point8 += f.result()[1]
-    # print(
-    #     f'Pre-emptive (DDT - RV 0.8%):\nAverage outbreak size: {sum_drv_point8 / NUMBER_OF_SIMULATIONS}\nNumber of nodes: {node_drv_point8}')
+    sum_drv_point8 = 0
+    node_drv_point8 = 0
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        results = []
+        exclude = []
+        for i in range(NUMBER_OF_SIMULATIONS):
+            seedIndex = exclude_random(exclude, 364544)
+            exclude.append(seedIndex)
+            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+                                           './Pre-emptive/DV/initialStatus_point2.csv',
+                                           seedIndex,
+                                           7,
+                                           32,
+                                           i
+                                           ))
+        for f in concurrent.futures.as_completed(results):
+            sum_drv_point8 += f.result()[0]
+            node_drv_point8 += f.result()[1]
+    print(
+        f'Pre-emptive (DDT - DV 0.2%):\nAverage outbreak size: {sum_drv_point8 / NUMBER_OF_SIMULATIONS}\nNumber of nodes: {node_drv_point8}')
     #
     # # Pre-emptive: DDT - RV 1%
     # sum_drv_1 = 0
