@@ -31,7 +31,7 @@ def runSimulation_Reactive(inputNetworksPrefix,
     # Gather information from Day 0 to START_DAY
     InfectedUsID = Status_UsID[r]
     NbNodes = []
-
+    indexToVacc = []
     ## Get all neighboring nodes
     for iday in range(START_DAY):
         LinkDf = pd.read_csv(inputNetworksPrefix + str(iday) + '.csv',
@@ -44,10 +44,10 @@ def runSimulation_Reactive(inputNetworksPrefix,
 
     ## Vaccinate based on strategy
     nOfVacc = int(PROPORTION * len(NbNodes))
+
     if(METHOD == 'RV'):
-        toVaccinateIndex = np.random.choice(len(NbNodes), nOfVacc) #Randomly choose
-        for i in toVaccinateIndex:
-            Status[i] = 'Recovered'
+        indexToVacc = np.random.choice(len(NbNodes), nOfVacc) #Randomly choose
+
 
     elif(METHOD == 'DV'):
         DVRank = pd.read_csv('../StatusGeneration/ContactCount.csv')
@@ -56,11 +56,11 @@ def runSimulation_Reactive(inputNetworksPrefix,
         toVaccID = NbNodes[0:nOfVacc]
         for toVacc in toVaccID:
             index = Status_UsID.index(toVacc)
-            Status[index] = 'Recovered'
+            indexToVacc.append(index)
 
     elif(METHOD == 'IMV'):
-        IMVRank = pd.read_csv('../StatusGeneration/IMVRank.csv', names=['UsID', 'Rank'])
-        IMVRank = IMVRank.sort_values(['Rank'], ascending=False)
+        IMVRank = pd.read_csv('../StatusGeneration/DDT-IMVranking.csv', names=['UsID', 'IMVrank', 'IMEVrank', 'IMTVrank', 'Degree'])
+        IMVRank = IMVRank.sort_values(['IMVrank'], ascending=False)
         RankUs = IMVRank['UsID'].tolist()
 
         def IMV_sorting(id):
@@ -73,11 +73,14 @@ def runSimulation_Reactive(inputNetworksPrefix,
         toVaccID = NbNodes[0:nOfVacc]
         for toVacc in toVaccID:
             index = Status_UsID.index(toVacc)
-            Status[index] = 'Recovered'
-
+            indexToVacc.append(index)
 
     #----- Run simulation day by day -----#
     for day in range(0, END_DAY):
+        if(day == START_DAY): ## Vaccination start at day 7
+            for index in indexToVacc:
+                Status[index] = 'Recovered'
+
         exposure_dict = dict()
         # print('Day '+ str(day) + ": Begin")
         # Check and Update the Status everyday

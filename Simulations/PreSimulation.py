@@ -99,7 +99,7 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
                                                                    sigma=0.418
                                                                    ))
                         infectiousAt = day + incubation - 3
-                        recoverAt = day + incubation + 11
+                        recoverAt = day + incubation + 8
                         Status[nbIndex] = 'Infected'
                         Status_InfectiousAt[nbIndex] = infectiousAt
                         Status_RecoverAt[nbIndex] = recoverAt
@@ -252,7 +252,7 @@ if __name__ == '__main__':
     sum = 0
     node = 0
     num_sim = 0
-    seedIndex = 5436
+    seedIndex = 31499
     with concurrent.futures.ThreadPoolExecutor() as executor:
         results = []
         for i in range(NUMBER_OF_SIMULATIONS):
