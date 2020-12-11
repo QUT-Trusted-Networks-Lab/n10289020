@@ -11,7 +11,7 @@ def runSimulation_Reactive(inputNetworksPrefix,
                            inputStatusFile,
                            seedIndex,
                            METHOD = 'RV',
-                           PROPORTION = 0.002,
+                           PERCENT = 0.002,
                            START_DAY = 7,
                            END_DAY = 32, # Change to simulate at a bigger scale,
                            SIMULATION_ID = 0
@@ -22,28 +22,33 @@ def runSimulation_Reactive(inputNetworksPrefix,
     Status = StatusDf['Status'].tolist()
     Status_InfectiousAt = StatusDf['InfectiousAt'].tolist()
     Status_RecoverAt = StatusDf['RecoverAt'].tolist()
-    r = seedIndex
-    Status[r] = 'Infectious'
-    Status_RecoverAt[r] = END_DAY
-    nOfInfection = 1
+    InfectedUsID = []
+    for r in seedIndex:
+        Status[r] = 'Infectious'
+        InfectedUsID.append(Status_UsID[r])
+        Status_RecoverAt[r] = END_DAY
+    nOfInfection = len(seedIndex)
     node = 0
 
     # Gather information from Day 0 to START_DAY
-    InfectedUsID = Status_UsID[r]
     NbNodes = []
     indexToVacc = []
     ## Get all neighboring nodes
     for iday in range(START_DAY):
-        LinkDf = pd.read_csv(inputNetworksPrefix + str(iday) + '.csv',
-                             names=['HostID', 'NbID', 'HSt', 'HEnd', 'NbSt', 'NbEnd'])
-        neighbors_host = LinkDf.loc[LinkDf['HostID'] == InfectedUsID]['NbID'].tolist()
-        neighbors_nb = LinkDf.loc[LinkDf['HostID'] == InfectedUsID]['HostID'].tolist()
-        NbNodes += neighbors_host + neighbors_nb
-        NbNodes = list(dict.fromkeys(NbNodes))
+        for infectiosID in InfectedUsID:
+            LinkDf = pd.read_csv(inputNetworksPrefix + str(iday) + '.csv',
+                                 names=['HostID', 'NbID', 'HSt', 'HEnd', 'NbSt', 'NbEnd'])
+            neighbors_host = LinkDf.loc[LinkDf['HostID'] == infectiosID]['NbID'].tolist()
+            neighbors_nb = LinkDf.loc[LinkDf['HostID'] == infectiosID]['HostID'].tolist()
+            NbNodes += neighbors_host + neighbors_nb
+            NbNodes = list(dict.fromkeys(NbNodes))
         pass
 
     ## Vaccinate based on strategy
-    nOfVacc = int(PROPORTION * len(NbNodes))
+
+    nOfVacc = int(PERCENT/100 * len(NbNodes))
+    if(nOfVacc == 0):
+        nOfVacc = 1
 
     if(METHOD == 'RV'):
         indexToVacc = np.random.choice(len(NbNodes), nOfVacc) #Randomly choose
@@ -53,6 +58,25 @@ def runSimulation_Reactive(inputNetworksPrefix,
         DVRank = pd.read_csv('../StatusGeneration/ContactCount.csv')
         RankUs = DVRank['UsID'].tolist()
         NbNodes = sorted(NbNodes, key=lambda x: RankUs.index(x))
+        toVaccID = NbNodes[0:nOfVacc]
+        for toVacc in toVaccID:
+            index = Status_UsID.index(toVacc)
+            indexToVacc.append(index)
+
+
+    elif (METHOD == 'AV'):
+        AVRank = pd.read_csv('../StatusGeneration/DDT-AVranking.csv',
+                              names=['UsID', 'AVrank'])
+        AVRank = AVRank.sort_values(['AVrank'], ascending=False)
+        RankUs = AVRank['UsID'].tolist()
+
+        def AV_sorting(id):
+            if (id in RankUs):
+                return RankUs.index(id)
+            else:
+                return 1000000
+
+        NbNodes = sorted(NbNodes, key=AV_sorting)
         toVaccID = NbNodes[0:nOfVacc]
         for toVacc in toVaccID:
             index = Status_UsID.index(toVacc)
@@ -74,6 +98,8 @@ def runSimulation_Reactive(inputNetworksPrefix,
         for toVacc in toVaccID:
             index = Status_UsID.index(toVacc)
             indexToVacc.append(index)
+    print(len(NbNodes))
+    print(len(indexToVacc))
 
     #----- Run simulation day by day -----#
     for day in range(0, END_DAY):
@@ -155,7 +181,7 @@ def runSimulation_Reactive(inputNetworksPrefix,
                                                                    sigma=0.418
                                                                    ))
                         infectiousAt = day + incubation - 3
-                        recoverAt = day + incubation + 11
+                        recoverAt = day + incubation + 8
                         Status[nbIndex] = 'Infected'
                         Status_InfectiousAt[nbIndex] = infectiousAt
                         Status_RecoverAt[nbIndex] = recoverAt
@@ -182,15 +208,52 @@ def runSimulation_Reactive(inputNetworksPrefix,
 
 
 
-
+import concurrent.futures
+import time
 if __name__ == '__main__':
     # Test
+    start = time.perf_counter()
     print(runSimulation_Reactive(
         inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
         inputStatusFile='./Reactive/DDT/initialStatus.csv',
-        METHOD='RV',
+        METHOD='DV',
         START_DAY=7,
         END_DAY=32,
-        seedIndex=0,
-        PROPORTION=0.1
+        seedIndex=[0,1,31499],
+        PERCENT=1
     ))
+
+    # NUMBER_OF_SIMULATIONS = 100
+    # methods = ['AV']
+    # percentages = [0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2]
+    # seedIndex = 31499
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     for method in methods:
+    #         for percent in percentages:
+    #             results = []
+    #             for i in range(NUMBER_OF_SIMULATIONS):
+    #                 results.append(executor.submit(runSimulation_Reactive,
+    #                                                '../Data/SPDTNetwork/DDT/bclink_', #Input file prefix
+    #                                                './Reactive/DDT/initialStatus.csv', #Input status file
+    #                                                method,
+    #                                                7,32, # Start and end day
+    #                                                seedIndex,
+    #                                                percent
+    #                                                ))
+    #
+    #             for f in concurrent.futures.as_completed(results):
+    #                 num_sim += 1
+    #                 sum += f.result()['size']
+    #                 node += f.result()['nodes']
+    #
+    #             print(
+    #                 f'Pre-emptive (DDT - {method} {percent}%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+
+    finish = time.perf_counter()
+
+
+
+    print(f'Finished in {round(finish - start, 2)} second(s).')

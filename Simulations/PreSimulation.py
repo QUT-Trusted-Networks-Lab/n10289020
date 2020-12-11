@@ -198,12 +198,14 @@ def runSim_DDT(seedIndex, method, percent):
     return_dict['method'] = method
     return_dict['percent'] = percent
     return_dict['size'] = result[0]
+    return_dict['nodes'] = result[1]
     return_dict['seedIndex'] = seedIndex
     return return_dict
     pass
 
 if __name__ == '__main__':
     start = time.perf_counter()
+    NUMBER_OF_SIMULATIONS = 50
     #---------- Simulation 1: Pre-emptive no Vaccine, 7 days ------------
     # result = runSimulation_PreEmptive(inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
     #                                    inputStatusFile='./Pre-emptive/RV/initialStatus_noVacc.csv',
@@ -214,8 +216,31 @@ if __name__ == '__main__':
 
 
     # ------------- Simulation for a particular node -------------
-    # methods = ['RV','DV','IMV']
-    # percents = [0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8 , 2]
+    # methods = ['RV','DV','IMV', 'AV']
+    methods = ['AV']
+    percentages = [0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8 , 2]
+    seedIndex = 31499
+    sum = 0
+    node = 0
+    num_sim = 0
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        for method in methods:
+            for percent in percentages:
+                results = []
+                for i in range(NUMBER_OF_SIMULATIONS):
+                    results.append(executor.submit(runSim_DDT,seedIndex, method, percent
+                                                   ))
+
+                for f in concurrent.futures.as_completed(results):
+                    num_sim += 1
+                    sum += f.result()['size']
+                    node += f.result()['nodes']
+
+                print(
+                    f'Pre-emptive (DDT - {method} {percent}%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+            # print(
+            #     f'({seedIndex} - DV 0.2%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+
     # seedNd = 27160 # Seed node index
     # num_workers = mp.cpu_count() - 2
     # pool = mp.Pool(num_workers)
@@ -228,7 +253,7 @@ if __name__ == '__main__':
     # pool.join()
     # print('Finished')
 
-    NUMBER_OF_SIMULATIONS = 50
+
 
     
     # num_workers = mp.cpu_count() - 2
@@ -249,468 +274,469 @@ if __name__ == '__main__':
     # print(f'Seed Index: 27160 (No Vacc):\nAverage outbreak size: {result_list[0] / NUMBER_OF_SIMULATIONS}\n'
     #       f'Number of nodes: {result_list[1]}')
 
-    sum = 0
-    node = 0
-    num_sim = 0
-    seedIndex = 31499
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/RV/initialStatus_point2.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            print(
-                f'({seedIndex} - RV 0.2%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - RV 0.2%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # seedIndex = 31499
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/RV/initialStatus_point2.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    # print(
+    #     f'Pre-emptive ({seedIndex} - RV 0.2%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/DV/initialStatus_point2.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - DV 0.2%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - DV 0.2%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/DV/initialStatus_point4.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - DV 0.4%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - DV 0.4%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/DV/initialStatus_point6.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - DV 0.6%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - DV 0.6%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/DV/initialStatus_point8.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - DV 0.8%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - DV 0.8%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/DV/initialStatus_1.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - DV 1.0%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - DV 1.0%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/DV/initialStatus_1point2.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - DV 1.2%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - DV 1.2%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/DV/initialStatus_1point4.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - DV 1.4%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - DV 1.4%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/DV/initialStatus_1point6.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - DV 1.6%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - DV 1.6%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/DV/initialStatus_1point8.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - DV 1.8%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - DV 1.8%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/DV/initialStatus_2.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - DV 2.0%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - D 2.0%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/IMV/initialStatus_point2.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - IMV 0.2%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - IMV 0.2%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/IMV/initialStatus_point4.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - IMV 0.4%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - IMV 0.4%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/IMV/initialStatus_point6.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - IMV 0.6%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - IMV 0.6%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/IMV/initialStatus_point8.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - IMV 0.8%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - IMV 0.8%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/IMV/initialStatus_1.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - IMV 1.0%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - IMV 1.0%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/IMV/initialStatus_1point2.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - IMV 1.2%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - IMV 1.2%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/IMV/initialStatus_1point4.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - IMV 1.4%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - IMV 1.4%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/IMV/initialStatus_1point6.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - IMV 1.6%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - IMV 1.6%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/IMV/initialStatus_1point8.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - IMV 1.8%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - IMV 1.8%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    #
+    # sum = 0
+    # node = 0
+    # num_sim = 0
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     results = []
+    #     for i in range(NUMBER_OF_SIMULATIONS):
+    #         results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
+    #                                        './Pre-emptive/IMV/initialStatus_2.csv',
+    #                                        seedIndex,
+    #                                        7,
+    #                                        32,
+    #                                        i
+    #                                        ))
+    #     for f in concurrent.futures.as_completed(results):
+    #         num_sim += 1
+    #         sum += f.result()[0]
+    #         node += f.result()[1]
+    #         # print(
+    #         #     f'({seedIndex} - IMV 2.0%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
+    # print(
+    #     f'Pre-emptive ({seedIndex} - IMV 2.0%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
 
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/DV/initialStatus_point2.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - DV 0.2%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - DV 0.2%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
 
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/DV/initialStatus_point4.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - DV 0.4%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - DV 0.4%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
 
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/DV/initialStatus_point6.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - DV 0.6%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - DV 0.6%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/DV/initialStatus_point8.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - DV 0.8%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - DV 0.8%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/DV/initialStatus_1.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - DV 1.0%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - DV 1.0%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/DV/initialStatus_1point2.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - DV 1.2%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - DV 1.2%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/DV/initialStatus_1point4.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - DV 1.4%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - DV 1.4%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/DV/initialStatus_1point6.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - DV 1.6%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - DV 1.6%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/DV/initialStatus_1point8.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - DV 1.8%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - DV 1.8%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/DV/initialStatus_2.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - DV 2.0%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - D 2.0%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/IMV/initialStatus_point2.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - IMV 0.2%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - IMV 0.2%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/IMV/initialStatus_point4.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - IMV 0.4%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - IMV 0.4%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/IMV/initialStatus_point6.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - IMV 0.6%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - IMV 0.6%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/IMV/initialStatus_point8.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - IMV 0.8%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - IMV 0.8%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/IMV/initialStatus_1.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - IMV 1.0%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - IMV 1.0%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/IMV/initialStatus_1point2.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - IMV 1.2%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - IMV 1.2%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/IMV/initialStatus_1point4.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - IMV 1.4%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - IMV 1.4%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/IMV/initialStatus_1point6.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - IMV 1.6%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - IMV 1.6%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/IMV/initialStatus_1point8.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - IMV 1.8%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - IMV 1.8%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
-
-    sum = 0
-    node = 0
-    num_sim = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        results = []
-        for i in range(NUMBER_OF_SIMULATIONS):
-            results.append(executor.submit(runSimulation_PreEmptive, '../Data/SPDTNetwork/DDT/bclink_',
-                                           './Pre-emptive/IMV/initialStatus_2.csv',
-                                           seedIndex,
-                                           7,
-                                           32,
-                                           i
-                                           ))
-        for f in concurrent.futures.as_completed(results):
-            num_sim += 1
-            sum += f.result()[0]
-            node += f.result()[1]
-            # print(
-            #     f'({seedIndex} - IMV 2.0%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
-    print(
-        f'Pre-emptive ({seedIndex} - IMV 2.0%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
     # sum = 0
     # node = 0
     # num_sim = 0

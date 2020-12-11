@@ -51,10 +51,21 @@ class PreEmptiveStatus:
         nToVaccinate = int(proportion * len(UserId))
 
         # ---- This is for RV -------
-        toVaccinateIndex = np.random.choice(len(UserId), nToVaccinate) #Randomly choose
-        for i in toVaccinateIndex:
-            Status[i] = 'Recovered'
+        # toVaccinateIndex = np.random.choice(len(UserId), nToVaccinate) #Randomly choose
+        # for i in toVaccinateIndex:
+        #     Status[i] = 'Recovered'
 
+        # ---- This if for AV -------
+        AVRanking = pd.read_csv('./DDT-AVranking.csv', names=['UsID', 'AVRank'])
+        AVRanking = AVRanking.sort_values(['AVRank'], ascending=False)
+        nOfVacc = int(proportion * len(Status))
+
+        UsList = AVRanking['UsID'].tolist()
+
+        toVaccList = UsList[0:nOfVacc]
+        for toVacc in toVaccList:
+            index = UserId.index(toVacc)
+            Status[index] = 'Recovered'
 
         #----- This is for DV -------
         # Read the contact count csv
@@ -109,8 +120,8 @@ if __name__ == '__main__':
 
     ################### Generating Initial Status with RV strategy file #################
     DDTStatus.generateRVStatus(initialStatusFile="./output/Pre-emptive/DDT/initialStatus.csv",
-                               outputFile="./output/Pre-emptive/DDT/RV/initialStatus_2.csv",
-                               proportion = 0.02 # % of the population is vaccinated
+                               outputFile="./output/Pre-emptive/DDT/AV/initialStatus_1.csv",
+                               proportion = 0.01 # % of the population is vaccinated
                                )
     
     pass
