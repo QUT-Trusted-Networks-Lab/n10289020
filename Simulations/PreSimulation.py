@@ -193,7 +193,7 @@ def runSim_DDT(seedIndex, method, percent):
                                       seedIndex=seedIndex,
                                        START_DAY = 7,
                                        END_DAY =32)
-    print(f'DDT - {method} {percent}%: Outbreak size: {result[0]}. Seed node index: {seedIndex}')
+    # print(f'DDT - {method} {percent}%: Outbreak size: {result[0]}. Seed node index: {seedIndex}')
     return_dict = {}
     return_dict['method'] = method
     return_dict['percent'] = percent
@@ -205,7 +205,7 @@ def runSim_DDT(seedIndex, method, percent):
 
 if __name__ == '__main__':
     start = time.perf_counter()
-    NUMBER_OF_SIMULATIONS = 50
+    NUMBER_OF_SIMULATIONS = 1000
     #---------- Simulation 1: Pre-emptive no Vaccine, 7 days ------------
     # result = runSimulation_PreEmptive(inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
     #                                    inputStatusFile='./Pre-emptive/RV/initialStatus_noVacc.csv',
@@ -216,18 +216,21 @@ if __name__ == '__main__':
 
 
     # ------------- Simulation for a particular node -------------
-    # methods = ['RV','DV','IMV', 'AV']
-    methods = ['AV']
+    methods = ['DV','IMV', 'AV']
     percentages = [0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8 , 2]
-    seedIndex = 31499
-    sum = 0
-    node = 0
-    num_sim = 0
+    # seedIndex = 31499
+
     with concurrent.futures.ThreadPoolExecutor() as executor:
         for method in methods:
             for percent in percentages:
+                sum = 0
+                node = 0
+                num_sim = 0
                 results = []
+                exclude = []
                 for i in range(NUMBER_OF_SIMULATIONS):
+                    seedIndex = exclude_random(exclude, 364544)
+                    exclude.append(seedIndex)
                     results.append(executor.submit(runSim_DDT,seedIndex, method, percent
                                                    ))
 
