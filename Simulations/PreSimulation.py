@@ -158,12 +158,11 @@ def log_result(result):
     result_list[2] += 1
     result_list[0] += result[0]
     result_list[1] += result[1]
-    print(f'num_simulations = {result_list[2]}, outbreak_size = {result_list[0] / result_list[2]}, num_nodes = {result_list[1]}')
 
 def log_result_2(result):
     print(f"DDT - {result['method']} {result['percent']}: Outbreak size: {result['size']}. Seed Index: {result[seedIndex]}")
 
-def runSim_DDT(seedIndex, method, percent):
+def runSim_DDT(seedIndex, method, percent, sim, return_dict):
     fileName = ''
     if(percent == 0):
         fileName = 'initialStatus_noVacc.csv'
@@ -193,19 +192,24 @@ def runSim_DDT(seedIndex, method, percent):
                                       seedIndex=seedIndex,
                                        START_DAY = 7,
                                        END_DAY =32)
-    # print(f'DDT - {method} {percent}%: Outbreak size: {result[0]}. Seed node index: {seedIndex}')
-    return_dict = {}
-    return_dict['method'] = method
-    return_dict['percent'] = percent
-    return_dict['size'] = result[0]
-    return_dict['nodes'] = result[1]
-    return_dict['seedIndex'] = seedIndex
-    return return_dict
+    result_list[2] += 1
+    result_list[0] += result[0]
+    result_list[1] += result[1]
+    print(f'Sim {sim}. DDT - {method} {percent}%: Outbreak size: {result[0]}. Seed node index: {seedIndex}')
+    return_dict[sim] = result
+    # return_dict = {}
+    # return_dict['method'] = method
+    # return_dict['percent'] = percent
+    # return_dict['size'] = result[0]
+    # return_dict['nodes'] = result[1]
+    # return_dict['seedIndex'] = seedIndex
+    # return return_dict
+
     pass
 
 if __name__ == '__main__':
     start = time.perf_counter()
-    NUMBER_OF_SIMULATIONS = 1000
+    NUMBER_OF_SIMULATIONS = 2
     #---------- Simulation 1: Pre-emptive no Vaccine, 7 days ------------
     # result = runSimulation_PreEmptive(inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
     #                                    inputStatusFile='./Pre-emptive/RV/initialStatus_noVacc.csv',
@@ -214,33 +218,63 @@ if __name__ == '__main__':
     #                                    )
     # print(f'DDT - No Vacc: {result}')
 
+    methods = ['AV']
+    percentages = [0.2, 0.4, 0.6]
+    # percentages = [0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2]
+    num_workers = mp.cpu_count()
+
+    for method in methods:
+        for percent in percentages:
+            pool = mp.Pool(num_workers)
+            jobs = []
+            sum = 0
+            sim = 0
+            node = 0
+            results = []
+            exclude = []
+            result_list = [0, 0, 0]
+            return_dict = mp.Manager().dict()
+            for i in range(NUMBER_OF_SIMULATIONS):
+                sim += 1
+                seedIndex = exclude_random(exclude, 364544)
+                exclude.append(seedIndex)
+                pool.apply_async(runSim_DDT, args=(seedIndex, method, percent, sim, return_dict))
+
+            pool.close()
+            pool.join()
+            for a in return_dict:
+                sum += return_dict[a][0]
+                node += return_dict[a][1]
+            print(
+                f'Pre-emptive (DDT - {method} {percent}%): Average outbreak size: {sum/NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
 
     # ------------- Simulation for a particular node -------------
-    methods = ['DV','IMV', 'AV']
-    percentages = [0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8 , 2]
-    # seedIndex = 31499
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        for method in methods:
-            for percent in percentages:
-                sum = 0
-                node = 0
-                num_sim = 0
-                results = []
-                exclude = []
-                for i in range(NUMBER_OF_SIMULATIONS):
-                    seedIndex = exclude_random(exclude, 364544)
-                    exclude.append(seedIndex)
-                    results.append(executor.submit(runSim_DDT,seedIndex, method, percent
-                                                   ))
-
-                for f in concurrent.futures.as_completed(results):
-                    num_sim += 1
-                    sum += f.result()['size']
-                    node += f.result()['nodes']
-
-                print(
-                    f'Pre-emptive (DDT - {method} {percent}%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
+    # methods = ['AV']
+    # percentages = [0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8 , 2]
+    # # seedIndex = 31499
+    #
+    #
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     for method in methods:
+    #         for percent in percentages:
+    #             sum = 0
+    #             node = 0
+    #             num_sim = 0
+    #             results = []
+    #             exclude = []
+    #             for i in range(NUMBER_OF_SIMULATIONS):
+    #                 seedIndex = exclude_random(exclude, 364544)
+    #                 exclude.append(seedIndex)
+    #                 results.append(executor.submit(runSim_DDT,seedIndex, method, percent
+    #                                                ))
+    #
+    #             for f in concurrent.futures.as_completed(results):
+    #                 num_sim += 1
+    #                 sum += f.result()['size']
+    #                 node += f.result()['nodes']
+    #
+    #             print(
+    #                 f'Pre-emptive (DDT - {method} {percent}%): Average outbreak size: {sum / NUMBER_OF_SIMULATIONS} Number of nodes: {node}\n')
             # print(
             #     f'({seedIndex} - DV 0.2%) Simulation {num_sim}. outbreak size: {sum / num_sim}. Number of nodes: {node}')
 
