@@ -197,7 +197,8 @@ class Executor:
                 f'DDT - {log["method"]} {log["percent"]}%: '
                 f'Outbreak size: {log["result"][0]}. '
                 f'Average: {self.result_list[0] / self.result_list[2]}. '
-                f'seed: {log["index"]}')
+                f'Node: {self.result_list[1]}. '
+                f'Seed: {log["index"]}')
 
     def schedule(self, function, args):
         self.pool.apply_async(function, args=args, callback=self.prompt)
@@ -209,10 +210,10 @@ class Executor:
 
 if __name__ == '__main__':
     start = time.perf_counter()
-    NUMBER_OF_SIMULATIONS = 5
+    NUMBER_OF_SIMULATIONS = 100
 
     methods = ['AV']
-    percentages = [0.2, 0.4, 0.6]
+    percentages = [1.8, 1.6,1.4,1.2,1,0.8,0.6,0.4,0.2]
     # percentages = [0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2]
     num_workers = mp.cpu_count() - 4
 
@@ -223,7 +224,7 @@ if __name__ == '__main__':
             for i in range(NUMBER_OF_SIMULATIONS):
                 seedIndex = exclude_random(exclude, 364544)
                 exclude.append(seedIndex)
-                executor.schedule(runSim_DDT, (seedIndex, method, percent))
+                executor.schedule(runSim_DDT, (31499, method, percent))
             executor.wait()
             print(
                 f'Pre-emptive (DDT - {method} {percent}%): '

@@ -120,8 +120,8 @@ if __name__ == '__main__':
 
     ################### Generating Initial Status with RV strategy file #################
     DDTStatus.generateRVStatus(initialStatusFile="./output/Pre-emptive/DDT/initialStatus.csv",
-                               outputFile="./output/Pre-emptive/DDT/AV/initialStatus_1.csv",
-                               proportion = 0.01 # % of the population is vaccinated
+                               outputFile="./output/Pre-emptive/DDT/DV/initialStatus_10.csv",
+                               proportion = 0.1 # % of the population is vaccinated
                                )
     
     pass
