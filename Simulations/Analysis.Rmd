@@ -30,14 +30,14 @@ DDT_12040320_100 <- read.xlsx("./Pre-emptive/DDT - 12040320.xlsx", 1, header = T
 
 ##Pre-emptive: DDT with random seed nodes, n = 100
 ```{r}
-DDT_Random_100 <- read.xlsx("./Pre-emptive/DDT.xlsx",1, header=TRUE)
+DDT_Random_100 <- read.xlsx("./Pre-emptive/DDT - 1000.xlsx",1, header=TRUE)
 p1 <- ggplot(data = DDT_Random_100, aes(x = Percentage, y = AverageSize, color=Strategy, group=Strategy)) + 
   geom_point() +
   geom_line() +
   scale_x_continuous(breaks = seq(0, 2, 0.4)) +
   xlab("Vaccination Coverage (%)") +
   ylab("Average Outbreak Size") +
-  labs(title = "DDT Pre-emptive (n = 100)", subtitle = "Seed node ID = Random") +
+  labs(title = "DDT Pre-emptive (n = 1000)", subtitle = "Seed node ID = Random") +
   theme(
     plot.title = element_text(size = 14, face = "bold"),
     plot.subtitle = element_text(size = 12),
@@ -50,7 +50,7 @@ dev.off()
 ```
 
 ```{r}
-DDT_3876644_100 <- read.xlsx("./Pre-emptive/DDT - 3876644.xlsx", 1, header=TRUE)
+DDT_3876644_100 <- read.xlsx("./Pre-emptive/DDT - 3876644 - covid.xlsx", 1, header=TRUE)
 p2 <- ggplot(data = DDT_3876644_100, aes(x = Percentage, y = AverageSize, color=Strategy, group=Strategy)) + 
   geom_point() +
   geom_line() +
@@ -71,7 +71,7 @@ dev.off()
 ```
 
 ```{r}
-DDT_3742524_100 <- read.xlsx("./Pre-emptive/DDT - 3742524.xlsx", 1, header=TRUE)
+DDT_3742524_100 <- read.xlsx("./Pre-emptive/DDT - 3742524 - covid.xlsx", 1, header=TRUE)
 p3 <- ggplot(data = DDT_3742524_100, aes(x = Percentage, y = AverageSize, color=Strategy, group=Strategy)) + 
   geom_point() +
   geom_line() +
