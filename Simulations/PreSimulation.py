@@ -10,6 +10,7 @@ from DiseasePropagation.Exposure import calculateExposure
 def runSimulation_PreEmptive(inputNetworksPrefix,
                               inputStatusFile,
                              seedIndex,
+                             r_value = 1,
                               START_DAY = 7,
                               END_DAY = 32, # Change to simulate at a bigger scale,
                               SIMULATION_ID = 0
@@ -34,9 +35,9 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
             if((Status[i] == 'Infected') & (day == Status_InfectiousAt[i])):
                 Status[i] = 'Infectious'
             elif((Status[i] == 'Infectious')):
-                if(day == Status_InfectiousAt[i]):
+                if(day == Status_RecoverAt[i]):
                     Status[i] = 'Recovered'
-                else:
+                elif(day < Status_RecoverAt[i]):
                     infectiousUs.append(Status_UsID[i])
         # print("Status Checked.")
         # Simulate the network
@@ -81,7 +82,7 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
                                          )
                 exposure_dict[contactRows_Nb[n]] += expo
             for susceptibleId in exposure_dict:
-                prob = calculateTransProbability(exposure_dict[susceptibleId])
+                prob = calculateTransProbability(exposure_dict[susceptibleId], r_value)
                 # print(prob)
                 temp_prob = np.random.binomial(1,prob)
 
@@ -144,7 +145,7 @@ def log_result(result):
     result_list[1] += result[1]
 
 
-def runSim_DDT(seedIndex, method, percent):
+def runSim_DDT(seedIndex, method, percent, r_value):
     fileName = ''
     if(percent == 0):
         fileName = 'initialStatus_noVacc.csv'
@@ -171,6 +172,7 @@ def runSim_DDT(seedIndex, method, percent):
 
     result = runSimulation_PreEmptive(inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
                                        inputStatusFile=f'./Pre-emptive/{method}/{fileName}',
+                                      r_value=r_value,
                                       seedIndex=seedIndex,
                                        START_DAY = 7,
                                        END_DAY =32)
@@ -180,6 +182,7 @@ def runSim_DDT(seedIndex, method, percent):
     log['method'] = method
     log['percent'] = percent
     log['index'] = seedIndex
+    log['r_value'] = r_value
     return log
     pass
 
@@ -198,6 +201,7 @@ class Executor:
                 f'Outbreak size: {log["result"][0]}. '
                 f'Average: {self.result_list[0] / self.result_list[2]}. '
                 f'Node: {self.result_list[1]}. '
+                f'R_value: {log["r_value"]}'
                 f'Seed: {log["index"]}')
 
     def schedule(self, function, args):
@@ -212,24 +216,25 @@ if __name__ == '__main__':
     start = time.perf_counter()
     NUMBER_OF_SIMULATIONS = 100
 
-    methods = ['AV']
-    percentages = [1.8, 1.6,1.4,1.2,1,0.8,0.6,0.4,0.2]
-    # percentages = [0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2]
+    methods = ['DV', 'IMV', 'RV', 'AV']
+    percentages = [1]
+    r_list = [1, 0.8, 1.5]
     num_workers = mp.cpu_count() - 4
 
     for method in methods:
         for percent in percentages:
-            exclude = []
-            executor = Executor(num_workers)
-            for i in range(NUMBER_OF_SIMULATIONS):
-                seedIndex = exclude_random(exclude, 364544)
-                exclude.append(seedIndex)
-                executor.schedule(runSim_DDT, (31499, method, percent))
-            executor.wait()
-            print(
-                f'Pre-emptive (DDT - {method} {percent}%): '
-                f'Average outbreak size: {executor.result_list[0]/NUMBER_OF_SIMULATIONS} '
-                f'Number of nodes: {executor.result_list[1]}\n')
+            for r_value in r_list:
+                exclude = []
+                executor = Executor(num_workers)
+                for i in range(NUMBER_OF_SIMULATIONS):
+                    seedIndex = exclude_random(exclude, 364544)
+                    exclude.append(seedIndex)
+                    executor.schedule(runSim_DDT, (seedIndex, method, percent, np.random.normal(1, 0.1)))
+                executor.wait()
+                print(
+                    f'Pre-emptive (DDT - {method} {percent}%, R value: {r_value}): '
+                    f'Average outbreak size: {executor.result_list[0]/NUMBER_OF_SIMULATIONS} '
+                    f'Number of nodes: {executor.result_list[1]}\n')
 
     finish = time.perf_counter()
     print(f'Finished in {round(finish - start, 2)} second(s).')

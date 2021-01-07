@@ -116,9 +116,9 @@ def runSimulation_Reactive(inputNetworksPrefix,
             if((Status[i] == 'Infected') & (day == Status_InfectiousAt[i])):
                 Status[i] = 'Infectious'
             elif((Status[i] == 'Infectious')):
-                if(day == Status_InfectiousAt[i]):
+                if(day == Status_RecoverAt[i]):
                     Status[i] = 'Recovered'
-                else:
+                elif(day < Status_RecoverAt[i]):
                     infectiousUs.append(Status_UsID[i])
         # print("Status Checked.")
         # Simulate the network
@@ -267,9 +267,8 @@ if __name__ == '__main__':
     # ))
     NUMBER_OF_SIMULATIONS = 1000
 
-    methods = ['DV']
-    percentages = [2, 1.8, 1.6, 1.4, 1.2, 1, 0.8, 0.6, 0.4, 0.2]
-    percentages = [20, 15, 10]
+    methods = ['RV', 'AV', 'IMV', 'DV']
+    percentages = [1]
     # percentages = [0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2]
     num_workers = mp.cpu_count() - 3
     index = [ind for ind in range(364544)]
