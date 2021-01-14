@@ -186,6 +186,8 @@ def runSim_DDT(seedIndex, method, percent, r_value):
     return log
     pass
 
+import csv
+
 class Executor:
     def __init__(self, process_num):
         self.pool = mp.Pool(process_num)
@@ -198,6 +200,14 @@ class Executor:
             self.result_list[2] += 1
             self.result_list[0] += log['result'][0]
             self.result_list[1] += log['result'][1]
+            with open(r'./r-value.csv', 'a', newline='') as file:
+                fieldNames = ['Strategy', 'Coverage', 'R_value', 'Size', 'Node']
+                writer = csv.DictWriter(file, fieldnames = fieldNames)
+                writer.writerow({'Strategy': log["method"],
+                                 'Coverage': log['percent'],
+                                 'R_value': log['r_value'],
+                                 'Size': log['result'][0],
+                                 })
             print(
                 f'Sim {self.result_list[2]}. '
                 f'DDT - {log["method"]} {log["percent"]}%: '
@@ -217,12 +227,12 @@ class Executor:
 
 if __name__ == '__main__':
     start = time.perf_counter()
-    NUMBER_OF_SIMULATIONS = 100
+    NUMBER_OF_SIMULATIONS = 1000
 
-    methods = ['DV', 'IMV', 'RV', 'AV']
+    methods = ['DV', 'IMV', 'AV', 'RV' ]
     percentages = [1]
     r_list = [1, 1.2, 1.7]
-    num_workers = mp.cpu_count() - 4
+    num_workers = mp.cpu_count()
 
     for method in methods:
         for percent in percentages:
@@ -232,7 +242,7 @@ if __name__ == '__main__':
                 for i in range(NUMBER_OF_SIMULATIONS):
                     seedIndex = exclude_random(exclude, 364544)
                     exclude.append(seedIndex)
-                    executor.schedule(runSim_DDT, (seedIndex, method, percent, np.random.normal(1, 0.1)))
+                    executor.schedule(runSim_DDT, (seedIndex, method, percent, r_value))
                 executor.wait()
                 print(
                     f'Pre-emptive (DDT - {method} {percent}%, R value: {r_value}): '
