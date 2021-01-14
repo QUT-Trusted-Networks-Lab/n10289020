@@ -189,9 +189,12 @@ def runSim_DDT(seedIndex, method, percent, r_value):
 class Executor:
     def __init__(self, process_num):
         self.pool = mp.Pool(process_num)
-        self.result_list = [0,0,0]
+        self.result_list = [0,0,0, 0]
+        self.size_list = []
     def prompt(self, log):
         if log:
+            self.size_list.append(log['result'][0])
+            self.result_list[3] = np.std(self.size_list)
             self.result_list[2] += 1
             self.result_list[0] += log['result'][0]
             self.result_list[1] += log['result'][1]
@@ -200,8 +203,8 @@ class Executor:
                 f'DDT - {log["method"]} {log["percent"]}%: '
                 f'Outbreak size: {log["result"][0]}. '
                 f'Average: {self.result_list[0] / self.result_list[2]}. '
-                f'Node: {self.result_list[1]}. '
-                f'R_value: {log["r_value"]}'
+                f'Sd: {self.result_list[3]}. '
+                f'R_value: {log["r_value"]}. '
                 f'Seed: {log["index"]}')
 
     def schedule(self, function, args):
@@ -218,7 +221,7 @@ if __name__ == '__main__':
 
     methods = ['DV', 'IMV', 'RV', 'AV']
     percentages = [1]
-    r_list = [1, 0.8, 1.5]
+    r_list = [1, 1.2, 1.7]
     num_workers = mp.cpu_count() - 4
 
     for method in methods:
@@ -234,7 +237,8 @@ if __name__ == '__main__':
                 print(
                     f'Pre-emptive (DDT - {method} {percent}%, R value: {r_value}): '
                     f'Average outbreak size: {executor.result_list[0]/NUMBER_OF_SIMULATIONS} '
-                    f'Number of nodes: {executor.result_list[1]}\n')
+                    f'Number of nodes: {executor.result_list[1]}\n'
+                    f'Standard Dev: {executor.result_list[3]}')
 
     finish = time.perf_counter()
     print(f'Finished in {round(finish - start, 2)} second(s).')

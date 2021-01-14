@@ -24,11 +24,7 @@ library(xlsx)
 
 You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-DDT_12040320_100 <- read.xlsx("./Pre-emptive/DDT - 12040320.xlsx", 1, header = TRUE)
-```
-
-##Pre-emptive: DDT with random seed nodes, n = 100
+##Pre-emptive: DDT with random seed nodes, n = 1000
 ```{r}
 DDT_Random_100 <- read.xlsx("./Pre-emptive/DDT - 1000.xlsx",1, header=TRUE)
 p1 <- ggplot(data = DDT_Random_100, aes(x = Percentage, y = AverageSize, color=Strategy, group=Strategy)) + 
@@ -91,10 +87,20 @@ dev.off()
 ```
 
 ```{r}
-f1 <- function(x) {
-  return(1 - exp(-1 * x))
-}
-
-curve(expr = f1, from = 0, to=4)
+DDT_Rvalue <- read.xlsx("./Pre-emptive/DDT-Rvalue.xlsx", 1, header = TRUE)
+p4 <- ggplot(data = DDT_Rvalue, aes(x = Strategy, y = Size, fill = R_value)) + 
+  geom_bar(stat = "identity", color="black", position=position_dodge()) +
+  xlab("Vaccination Strategy") +
+  ylab("Average Outbreak Size") +
+  labs(title = "DDT Pre-emptive (n = 1000)", subtitle = "Vacination Coverage = 1%", fill="R Value") +
+  scale_fill_discrete(labels = c("1.0", "1.2", "1.70")) +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 12),
+    axis.title = element_text(size = 12, face = "bold")
+  )
+png("DDT_Rvalue.png")
+print(p4)
+dev.off()
 ```
 
