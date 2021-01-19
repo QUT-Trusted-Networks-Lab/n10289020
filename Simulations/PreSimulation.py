@@ -229,9 +229,9 @@ if __name__ == '__main__':
     start = time.perf_counter()
     NUMBER_OF_SIMULATIONS = 1000
 
-    methods = ['DV', 'IMV', 'AV', 'RV' ]
+    methods = ['AV', 'RV' ]
     percentages = [1]
-    r_list = [1, 1.2, 1.7]
+    r_list = [1.2, 1.7]
     num_workers = mp.cpu_count()
 
     for method in methods:
