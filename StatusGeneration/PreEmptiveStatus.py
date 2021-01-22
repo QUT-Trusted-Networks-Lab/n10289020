@@ -1,5 +1,10 @@
 import pandas as pd
 import numpy as np
+
+## This is to generate the initial status files for pre-emptive simulation,
+## The file is stored in the "./output" folder. There are initial status files for
+## different strategies with multiple vaccination rate. There are total of 4 statuses:
+## Susceptible, Infected, Infectious, Recovered (Vaccinated also counted as Recovered)
 class PreEmptiveStatus:
     def __init__(self,
                  dataFolder,
@@ -7,12 +12,13 @@ class PreEmptiveStatus:
                  ):
         self.dataFolder = dataFolder
         self.linkFilePrefix = linkFilePrefix
-        self.totalDays = 7
+        self.totalDays = 7 # Get the data of the first 7 days
         self.status = []
         self.population = []
         self.finalDf = pd.DataFrame()
         pass
 
+    # Get all user ID in the populations
     def getPopulation(self):
         allHost = pd.Series()
         for i in range(0, self.totalDays):
@@ -26,6 +32,7 @@ class PreEmptiveStatus:
         self.population = allHost.unique().tolist()
         pass
 
+    #
     def generateInitialStatus(self, outputFile):
         self.getPopulation()
         self.status = ["Susceptible" for i in range(len(self.population))]
@@ -41,14 +48,16 @@ class PreEmptiveStatus:
         self.finalDf.to_csv(outputFile, index=False)
         pass
 
-    def generateRVStatus(self, initialStatusFile,
+    def generateRVStatus(self, initialStatusFile, # The file to be overwritten. Currently all users are susceptible
                          outputFile,
-                         proportion
+                         proportion # Proportion of population to be vaccinated
                          ):
         df = pd.read_csv(initialStatusFile)
         UserId = df['UsID'].tolist()
         Status = df['Status'].tolist()
         nToVaccinate = int(proportion * len(UserId))
+
+        ##  Comment and uncomment each of these section below for different strategy
 
         # ---- This is for RV -------
         # toVaccinateIndex = np.random.choice(len(UserId), nToVaccinate) #Randomly choose
@@ -93,8 +102,6 @@ class PreEmptiveStatus:
         #     Status[index] = 'Recovered'
         # ------------------------------------------------
 
-        #Change Status to recover
-
 
         #Output data to csv file
         data = {
@@ -121,7 +128,7 @@ if __name__ == '__main__':
     ################### Generating Initial Status with RV strategy file #################
     DDTStatus.generateRVStatus(initialStatusFile="./output/Pre-emptive/DDT/initialStatus.csv",
                                outputFile="./output/Pre-emptive/DDT/DV/initialStatus_10.csv",
-                               proportion = 0.1 # % of the population is vaccinated
+                               proportion = 0.1
                                )
     
     pass

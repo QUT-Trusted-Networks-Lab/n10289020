@@ -32,40 +32,43 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
         # Check and Update the Status everyday
         infectiousUs = []
         for i in range(len(Status)):
-            if((Status[i] == 'Infected') & (day == Status_InfectiousAt[i])):
+            if((Status[i] == 'Infected') & (day == Status_InfectiousAt[i])): # Enter infectious period
                 Status[i] = 'Infectious'
             elif((Status[i] == 'Infectious')):
-                if(day == Status_RecoverAt[i]):
+                if(day == Status_RecoverAt[i]): # Enter Recovered period
                     Status[i] = 'Recovered'
-                elif(day < Status_RecoverAt[i]):
+                elif(day < Status_RecoverAt[i]): # Count as a infector
                     infectiousUs.append(Status_UsID[i])
-        # print("Status Checked.")
+
         # Simulate the network
         LinkDf = pd.read_csv(inputNetworksPrefix + str(day) + '.csv', names=['HostID','NbID','HSt','HEnd','NbSt','NbEnd'])
         # Check each Infectious User
 
+        ## Get all the node that contact with the infected
         for infectiousID in infectiousUs:
+            # Get the link when the susceptible, as a neighbor, contact with the infected
             contactRows_Host = LinkDf.loc[LinkDf['HostID'] == infectiousID]['NbID'].tolist()
             HSt_Host = LinkDf.loc[LinkDf['HostID'] == infectiousID]['HSt'].tolist()
             HEnd_Host = LinkDf.loc[LinkDf['HostID'] == infectiousID]['HEnd'].tolist()
             NbSt_Host = LinkDf.loc[LinkDf['HostID'] == infectiousID]['NbSt'].tolist()
             NbEnd_Host = LinkDf.loc[LinkDf['HostID'] == infectiousID]['NbEnd'].tolist()
 
-            # prob_host = LinkDf.loc[LinkDf['HostID'] == infectiousID]['Prob'].tolist()
+            # Get the link when the susceptible, as a host, contact with the infected
             contactRows_Nb = LinkDf.loc[LinkDf['NbID'] == infectiousID]['HostID'].tolist()
             HSt_Nb = LinkDf.loc[LinkDf['NbID'] == infectiousID]['HSt'].tolist()
             HEnd_Nb = LinkDf.loc[LinkDf['NbID'] == infectiousID]['HEnd'].tolist()
             NbSt_Nb = LinkDf.loc[LinkDf['NbID'] == infectiousID]['NbSt'].tolist()
             NbEnd_Nb = LinkDf.loc[LinkDf['NbID'] == infectiousID]['NbEnd'].tolist()
 
-            # prob_nb = LinkDf.loc[LinkDf['NbID'] == infectiousID]['Prob'].tolist()
-            # Initialize the dictionary
+
+            # Initialize the exposure dictionary
             for j in range(0, len(contactRows_Host)):
                 exposure_dict[contactRows_Host[j]] = 0
 
             for k in range(0, len(contactRows_Nb)):
                 exposure_dict[contactRows_Nb[k]] = 0
-            #Check host
+
+            # Calculate the exposure
             for m in range(0,len(contactRows_Host)):
                 expo = calculateExposure(HSt_Host[m],
                                          HEnd_Host[m],
@@ -81,6 +84,8 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
                                          NbEnd_Nb[n]
                                          )
                 exposure_dict[contactRows_Nb[n]] += expo
+
+
             for susceptibleId in exposure_dict:
                 prob = calculateTransProbability(exposure_dict[susceptibleId], r_value)
                 # print(prob)
@@ -91,16 +96,18 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
                     nbStatus = Status[nbIndex]
                     if (nbStatus == 'Susceptible'):
                         nOfInfection += 1
-                        # print('Infection occurred')
+
+                        # Incubation period
                         incubation = round(np.random.lognormal(mean=1.621,
                                                                sigma=0.418
                                                                ))
+
                         while (incubation < 3):
                             incubation = round(np.random.lognormal(mean=1.621,
                                                                    sigma=0.418
                                                                    ))
-                        infectiousAt = day + incubation - 3
-                        recoverAt = day + incubation + 8
+                        infectiousAt = day + incubation - 3 # The day Infected become Infectious
+                        recoverAt = day + incubation + 8 # The day Infectious become recovered
                         Status[nbIndex] = 'Infected'
                         Status_InfectiousAt[nbIndex] = infectiousAt
                         Status_RecoverAt[nbIndex] = recoverAt
@@ -108,20 +115,8 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
         # print('Day ' + str(day) + ': Finished')
         # print()
 
-    #----- Output to a file -----#
-    # FinalStatusData = {
-    #     'UsID': Status_UsID,
-    #     'Status': Status,
-    #     'InfectiousAt': Status_InfectiousAt,
-    #     'RecoverAt': Status_RecoverAt
-    # }
-    #
-    # FinalStatusDf = pd.DataFrame(FinalStatusData, columns=['UsID', 'Status', 'InfectiousAt', 'RecoverAt'])
-    # FinalStatusDf.to_csv(outputStatusFile, header=True, index=False)
-    # print()
-    # print(nOfInfection)
     if(nOfInfection > 100):
-        node = 1
+        node = 1 # If the node caused more than 100 infections
 
 
     return [nOfInfection, node]
@@ -144,7 +139,7 @@ def log_result(result):
     result_list[0] += result[0]
     result_list[1] += result[1]
 
-
+# This is for running the simulations
 def runSim_DDT(seedIndex, method, percent, r_value):
     fileName = ''
     if(percent == 0):
@@ -188,6 +183,7 @@ def runSim_DDT(seedIndex, method, percent, r_value):
 
 import csv
 
+# This is multiprocessing class to run and log the result
 class Executor:
     def __init__(self, process_num):
         self.pool = mp.Pool(process_num)
@@ -209,13 +205,13 @@ class Executor:
                                  'Size': log['result'][0],
                                  })
             print(
-                f'Sim {self.result_list[2]}. '
-                f'DDT - {log["method"]} {log["percent"]}%: '
-                f'Outbreak size: {log["result"][0]}. '
-                f'Average: {self.result_list[0] / self.result_list[2]}. '
-                f'Sd: {self.result_list[3]}. '
-                f'R_value: {log["r_value"]}. '
-                f'Seed: {log["index"]}')
+                f'Sim {self.result_list[2]}. ' # Number of simulations
+                f'DDT - {log["method"]} {log["percent"]}%: ' # Method, and vaccination rate
+                f'Outbreak size: {log["result"][0]}. ' # Number of infections
+                f'Average: {self.result_list[0] / self.result_list[2]}. ' # Average
+                f'Sd: {self.result_list[3]}. ' # Standard deviation
+                f'R_value: {log["r_value"]}. ' # Infectiousness
+                f'Seed: {log["index"]}') # Seed node index
 
     def schedule(self, function, args):
         self.pool.apply_async(function, args=args, callback=self.prompt)
@@ -231,7 +227,7 @@ if __name__ == '__main__':
 
     methods = ['AV', 'RV' ]
     percentages = [1]
-    r_list = [1.2, 1.7]
+    r_list = [1.2, 1.7] #R value
     num_workers = mp.cpu_count()
 
     for method in methods:
@@ -240,8 +236,8 @@ if __name__ == '__main__':
                 exclude = []
                 executor = Executor(num_workers)
                 for i in range(NUMBER_OF_SIMULATIONS):
-                    seedIndex = exclude_random(exclude, 364544)
-                    exclude.append(seedIndex)
+                    seedIndex = exclude_random(exclude, 364544) # 364544 is the number of users in the network
+                    exclude.append(seedIndex) # we dont want to run the same seed node again
                     executor.schedule(runSim_DDT, (seedIndex, method, percent, r_value))
                 executor.wait()
                 print(

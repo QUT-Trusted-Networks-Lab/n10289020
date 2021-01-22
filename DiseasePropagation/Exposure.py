@@ -19,7 +19,7 @@ def calculateExposure(HSt, HEnd, NbSt, NbEnd):
     ## These are the constant parameters in the disease model
     ## Thsese are discussed  in my published paper
     aer = 60 / 5
-    g = 0.7  ## particle generation rate in pfu - it is calculated for influenza disease
+    g = 0.7  ## particle generation rate in pfu
     q = 9 / (1000 * 60)  ## pulmonary rate -- this for human -- how much air a human inhaled
     v = 3.14 * 20 * 20 * 2  ## volume of the proximity -- this is the volume of air in the proximity - pi*r^2*h - r - radious, h height. It is considered as a cylinder of space.
     a = getAer(aer)  ## replaced per our - air in the space is not constant. It is changed over time. This is the rate of change of air. It is randomly generated as different place has different rates.
