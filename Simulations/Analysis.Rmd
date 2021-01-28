@@ -113,11 +113,13 @@ p4
 ```
 
 ```{r}
-#DDT_Rvalue <- read.xlsx("./r-value.xlsx", 1, header = TRUE)
+library(scales)
+DDT_Rvalue <- read.xlsx("./r-value.xlsx", 1, header = TRUE)
 DDT_Rvalue$R_value <- as.factor(DDT_Rvalue$R_value)
 
 
 p5 <- ggplot(DDT_Rvalue, aes(y = Strategy, x = Size, fill = R_value, color = R_value)) +
+  scale_x_continuous(trans="log2")
   geom_boxplot(outlier.size = 0)
 
 p5

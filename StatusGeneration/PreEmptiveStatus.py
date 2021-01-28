@@ -56,25 +56,32 @@ class PreEmptiveStatus:
         UserId = df['UsID'].tolist()
         Status = df['Status'].tolist()
         nToVaccinate = int(proportion * len(UserId))
+        pInfectionProtection = 0.038 # 3.8% effective in protecting against infection
+
 
         ##  Comment and uncomment each of these section below for different strategy
 
         # ---- This is for RV -------
-        # toVaccinateIndex = np.random.choice(len(UserId), nToVaccinate) #Randomly choose
-        # for i in toVaccinateIndex:
-        #     Status[i] = 'Recovered'
+        toVaccinateIndex = np.random.choice(len(UserId), nToVaccinate) #Randomly choose
+
+        for i in toVaccinateIndex:
+            temp_prob = np.random.binomial(1, pInfectionProtection)
+            if(temp_prob > 0):
+                Status[i] = 'Recovered'
 
         # ---- This if for AV -------
-        AVRanking = pd.read_csv('./DDT-AVranking.csv', names=['UsID', 'AVRank'])
-        AVRanking = AVRanking.sort_values(['AVRank'], ascending=False)
-        nOfVacc = int(proportion * len(Status))
-
-        UsList = AVRanking['UsID'].tolist()
-
-        toVaccList = UsList[0:nOfVacc]
-        for toVacc in toVaccList:
-            index = UserId.index(toVacc)
-            Status[index] = 'Recovered'
+        # AVRanking = pd.read_csv('./DDT-AVranking.csv', names=['UsID', 'AVRank'])
+        # AVRanking = AVRanking.sort_values(['AVRank'], ascending=False)
+        # nOfVacc = int(proportion * len(Status))
+        #
+        # UsList = AVRanking['UsID'].tolist()
+        #
+        # toVaccList = UsList[0:nOfVacc]
+        # for toVacc in toVaccList:
+        #     temp_prob = np.random.binomial(1, pInfectionProtection)
+        #     if (temp_prob > 0):
+        #         index = UserId.index(toVacc)
+        #         Status[index] = 'Recovered'
 
         #----- This is for DV -------
         # Read the contact count csv
@@ -85,8 +92,10 @@ class PreEmptiveStatus:
         # toVaccList = countList[0:nOfVacc]
         #
         # for toVacc in toVaccList:
-        #     index = UserId.index(toVacc)
-        #     Status[index] = 'Recovered'
+        #     temp_prob = np.random.binomial(1, pInfectionProtection)
+        #     if (temp_prob > 0):
+        #         index = UserId.index(toVacc)
+        #         Status[index] = 'Recovered'
 
         #----- This is for IMV -----
         # Read the ranking file
@@ -98,8 +107,10 @@ class PreEmptiveStatus:
         #
         # toVaccList = UsList[0:nOfVacc]
         # for toVacc in toVaccList:
-        #     index = UserId.index(toVacc)
-        #     Status[index] = 'Recovered'
+        #     temp_prob = np.random.binomial(1, pInfectionProtection)
+        #     if (temp_prob > 0):
+        #         index = UserId.index(toVacc)
+        #         Status[index] = 'Recovered'
         # ------------------------------------------------
 
 
