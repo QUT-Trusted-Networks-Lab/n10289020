@@ -50,7 +50,8 @@ class PreEmptiveStatus:
 
     def generateRVStatus(self, initialStatusFile, # The file to be overwritten. Currently all users are susceptible
                          outputFile,
-                         proportion # Proportion of population to be vaccinated
+                         proportion, # Proportion of population to be vaccinated,
+                         k # Missing k% top ranking nodes
                          ):
         df = pd.read_csv(initialStatusFile)
         UserId = df['UsID'].tolist()
@@ -62,12 +63,12 @@ class PreEmptiveStatus:
         ##  Comment and uncomment each of these section below for different strategy
 
         # ---- This is for RV -------
-        toVaccinateIndex = np.random.choice(len(UserId), nToVaccinate) #Randomly choose
-
-        for i in toVaccinateIndex:
-            temp_prob = np.random.binomial(1, pInfectionProtection)
-            if(temp_prob > 0):
-                Status[i] = 'Recovered'
+        # toVaccinateIndex = np.random.choice(len(UserId), nToVaccinate) #Randomly choose
+        #
+        # for i in toVaccinateIndex:
+        #     temp_prob = np.random.binomial(1, pInfectionProtection)
+        #     if(temp_prob > 0):
+        #         Status[i] = 'Recovered'
 
         # ---- This if for AV -------
         # AVRanking = pd.read_csv('./DDT-AVranking.csv', names=['UsID', 'AVRank'])
@@ -85,27 +86,28 @@ class PreEmptiveStatus:
 
         #----- This is for DV -------
         # Read the contact count csv
-        # contactCount = pd.read_csv('./ContactCount.csv')
-        # nOfVacc = int(proportion * len(Status))
-        # countList = contactCount['UsID'].tolist()
-        #
-        # toVaccList = countList[0:nOfVacc]
-        #
-        # for toVacc in toVaccList:
-        #     temp_prob = np.random.binomial(1, pInfectionProtection)
-        #     if (temp_prob > 0):
-        #         index = UserId.index(toVacc)
-        #         Status[index] = 'Recovered'
+        contactCount = pd.read_csv('./ContactCount.csv')
+        nOfVacc = int(proportion * len(Status))
+        nOfMissing = int(k * len(Status))
+        countList = contactCount['UsID'].tolist()
+
+        toVaccList = countList[nOfMissing:nOfVacc + nOfMissing]
+
+        for toVacc in toVaccList:
+            temp_prob = np.random.binomial(1, pInfectionProtection)
+            if (temp_prob > 0):
+                index = UserId.index(toVacc)
+                Status[index] = 'Recovered'
 
         #----- This is for IMV -----
         # Read the ranking file
         # IMVRanking = pd.read_csv('./DDT-IMVranking.csv', names=['UsID', 'IMVrank', 'IMEVrank', 'IMTVrank', 'Degree'])
         # IMVRanking = IMVRanking.sort_values(['IMVrank'], ascending=False)
         # nOfVacc = int(proportion * len(Status))
-        #
+        # nOfMissing = int(k * len(Status))
         # UsList = IMVRanking['UsID'].tolist()
         #
-        # toVaccList = UsList[0:nOfVacc]
+        # toVaccList = UsList[nOfMissing:nOfVacc + nOfMissing]
         # for toVacc in toVaccList:
         #     temp_prob = np.random.binomial(1, pInfectionProtection)
         #     if (temp_prob > 0):
@@ -138,8 +140,9 @@ if __name__ == '__main__':
 
     ################### Generating Initial Status with RV strategy file #################
     DDTStatus.generateRVStatus(initialStatusFile="./output/Pre-emptive/DDT/initialStatus.csv",
-                               outputFile="./output/Pre-emptive/DDT/DV/initialStatus_10.csv",
-                               proportion = 0.1
+                               outputFile="./output/Pre-emptive/DDT/MissingK/DV/5/initialStatus_1point2.csv",
+                               proportion = 0.012,
+                               k = 0.05
                                )
     
     pass

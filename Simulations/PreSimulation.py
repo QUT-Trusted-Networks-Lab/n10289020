@@ -140,7 +140,7 @@ def log_result(result):
     result_list[1] += result[1]
 
 # This is for running the simulations
-def runSim_DDT(seedIndex, method, percent, r_value):
+def runSim_DDT(seedIndex, method, percent, r_value, k):
     fileName = ''
     if(percent == 0):
         fileName = 'initialStatus_noVacc.csv'
@@ -164,13 +164,25 @@ def runSim_DDT(seedIndex, method, percent, r_value):
         fileName = 'initialStatus_1point8.csv'
     elif (percent == 2):
         fileName = 'initialStatus_2.csv'
+    elif(percent == 2.2):
+        fileName = 'initialStatus_2point2.csv'
 
-    result = runSimulation_PreEmptive(inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
+    result = 0
+
+    if k is None:
+        result = runSimulation_PreEmptive(inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
                                        inputStatusFile=f'./Pre-emptive/{method}/{fileName}',
                                       r_value=r_value,
                                       seedIndex=seedIndex,
                                        START_DAY = 7,
                                        END_DAY =32)
+    else:
+        result = runSimulation_PreEmptive(inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
+                                          inputStatusFile=f'./Pre-emptive/MissingK/{k}/{method}/{fileName}',
+                                          r_value=r_value,
+                                          seedIndex=seedIndex,
+                                          START_DAY=7,
+                                          END_DAY=32)
 
     log = dict()
     log['result'] = result
@@ -178,6 +190,7 @@ def runSim_DDT(seedIndex, method, percent, r_value):
     log['percent'] = percent
     log['index'] = seedIndex
     log['r_value'] = r_value
+    log['k'] = k
     return log
     pass
 
@@ -196,21 +209,22 @@ class Executor:
             self.result_list[2] += 1
             self.result_list[0] += log['result'][0]
             self.result_list[1] += log['result'][1]
-            with open(r'./r-value.csv', 'a', newline='') as file:
-                fieldNames = ['Strategy', 'Coverage', 'R_value', 'Size', 'Node']
-                writer = csv.DictWriter(file, fieldnames = fieldNames)
-                writer.writerow({'Strategy': log["method"],
-                                 'Coverage': log['percent'],
-                                 'R_value': log['r_value'],
-                                 'Size': log['result'][0],
-                                 })
+            # with open(r'./r-value.csv', 'a', newline='') as file:
+            #     fieldNames = ['Strategy', 'Coverage', 'R_value', 'Size', 'Node']
+            #     writer = csv.DictWriter(file, fieldnames = fieldNames)
+            #     writer.writerow({'Strategy': log["method"],
+            #                      'Coverage': log['percent'],
+            #                      'R_value': log['r_value'],
+            #                      'Size': log['result'][0],
+            #                      })
             print(
                 f'Sim {self.result_list[2]}. ' # Number of simulations
                 f'DDT - {log["method"]} {log["percent"]}%: ' # Method, and vaccination rate
                 f'Outbreak size: {log["result"][0]}. ' # Number of infections
                 f'Average: {self.result_list[0] / self.result_list[2]}. ' # Average
-                f'Sd: {self.result_list[3]}. ' # Standard deviation
-                f'R_value: {log["r_value"]}. ' # Infectiousness
+                f'Missing K: {log["k"]}%. '
+                # f'Sd: {self.result_list[3]}. ' # Standard deviation
+                # f'R_value: {log["r_value"]}. ' # Infectiousness
                 f'Seed: {log["index"]}') # Seed node index
 
     def schedule(self, function, args):
@@ -225,26 +239,29 @@ if __name__ == '__main__':
     start = time.perf_counter()
     NUMBER_OF_SIMULATIONS = 1000
 
-    methods = ['AV', 'RV' ]
-    percentages = [1]
-    r_list = [1.2, 1.7] #R value
+    methods = ['DV' ]
+    missing_k = [5]
+    percentages = [0.6, 0.8, 1, 1.2, 2]
+    r_list = [1] #R value
     num_workers = mp.cpu_count()
 
     for method in methods:
         for percent in percentages:
             for r_value in r_list:
-                exclude = []
-                executor = Executor(num_workers)
-                for i in range(NUMBER_OF_SIMULATIONS):
-                    seedIndex = exclude_random(exclude, 364544) # 364544 is the number of users in the network
-                    exclude.append(seedIndex) # we dont want to run the same seed node again
-                    executor.schedule(runSim_DDT, (seedIndex, method, percent, r_value))
-                executor.wait()
-                print(
-                    f'Pre-emptive (DDT - {method} {percent}%, R value: {r_value}): '
-                    f'Average outbreak size: {executor.result_list[0]/NUMBER_OF_SIMULATIONS} '
-                    f'Number of nodes: {executor.result_list[1]}\n'
-                    f'Standard Dev: {executor.result_list[3]}')
+                for k in missing_k:
+                    exclude = []
+                    executor = Executor(num_workers)
+                    for i in range(NUMBER_OF_SIMULATIONS):
+                        seedIndex = exclude_random(exclude, 364544) # 364544 is the number of users in the network
+                        exclude.append(seedIndex) # we dont want to run the same seed node again
+                        executor.schedule(runSim_DDT, (seedIndex, method, percent, r_value, k))
+                    executor.wait()
+                    print(
+                        f'Pre-emptive (DDT - {method} {percent}%, R value: {r_value}): '
+                        f'Average outbreak size: {executor.result_list[0]/NUMBER_OF_SIMULATIONS} '
+                        f'Number of nodes: {executor.result_list[1]}\n '
+                        f'Missing k: {k}%\n'
+                        )
 
     finish = time.perf_counter()
     print(f'Finished in {round(finish - start, 2)} second(s).')
