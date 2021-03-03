@@ -8,37 +8,100 @@ from DiseasePropagation.Exposure import calculateExposure
 
 
 def runSimulation_PreEmptive(inputNetworksPrefix,
-                              inputStatusFile,
+                             rankingFile,
+                             vaccPercent,
+                             missingPercent,
                              seedIndex,
                              r_value = 1,
-                              START_DAY = 7,
-                              END_DAY = 32, # Change to simulate at a bigger scale,
-                              SIMULATION_ID = 0
-                              ):
-    StatusDf = pd.read_csv(inputStatusFile)
+                             START_DAY = 7,
+                             END_DAY = 32, # Change to simulate at a bigger scale,
+                            ):
+
+
+
+
+    StatusDf = pd.read_csv('./initialStatus.csv')
     Status_UsID = StatusDf['UsID'].tolist()
-    Status = StatusDf['Status'].tolist()
-    Status_InfectiousAt = StatusDf['InfectiousAt'].tolist()
-    Status_RecoverAt = StatusDf['RecoverAt'].tolist()
-    r = seedIndex
-    Status[r] = 'Infectious'
-    Status_RecoverAt[r] = END_DAY
+    # Status = StatusDf['Status'].tolist()
+    # Status_InfectiousAt = StatusDf['InfectiousAt'].tolist()
+    # Status_RecoverAt = StatusDf['RecoverAt'].tolist()
+    # Status[r] = 'Infectious'
+    # Status_RecoverAt[r] = END_DAY
     nOfInfection = 1
     node = 0
+
+    # Vaccinate
+    ranking = pd.read_csv(rankingFile)
+    nOfVacc = int(vaccPercent/100 * len(Status_UsID))
+    nOfMissing = int(missingPercent/100 * len(Status_UsID))
+    countList = ranking['UsID'].tolist()
+
+    recoveredList = countList[nOfMissing:nOfVacc + nOfMissing]
+
+    infectedList = []
+    infected_infectiousAt_list = []
+    infected_recoveredAt_list = []
+
+    infectiousList = []
+    infectious_recoveredAt_list = []
+
+    infectiousList.append(Status_UsID[seedIndex])
+    infectious_recoveredAt_list.append(END_DAY)
+
     #----- Run simulation day by day -----#
     for day in range(START_DAY, END_DAY):
         exposure_dict = dict()
         # print('Day '+ str(day) + ": Begin")
         # Check and Update the Status everyday
+
+
         infectiousUs = []
-        for i in range(len(Status)):
-            if((Status[i] == 'Infected') & (day == Status_InfectiousAt[i])): # Enter infectious period
-                Status[i] = 'Infectious'
-            elif((Status[i] == 'Infectious')):
-                if(day == Status_RecoverAt[i]): # Enter Recovered period
-                    Status[i] = 'Recovered'
-                elif(day < Status_RecoverAt[i]): # Count as a infector
-                    infectiousUs.append(Status_UsID[i])
+
+        to_trans_infected_infectious = []
+        for i in  range(0, len(infectedList)):
+            if(infected_infectiousAt_list[i] == day):
+                to_trans_infected_infectious.append(i)
+        # print(infectedList)
+        # print(infectiousList)
+        # print(to_trans_infected_infectious)
+
+        for transI in to_trans_infected_infectious:
+            infectiousList.append(infectedList[transI])
+            infectious_recoveredAt_list.append(infected_recoveredAt_list[transI])
+
+        infectedList = [infectedList[i] for i in range(0,len(infectedList)) if i not in to_trans_infected_infectious]
+        infected_recoveredAt_list = [infected_recoveredAt_list[i] for i in range(0, len(infected_recoveredAt_list))
+                                     if i not in to_trans_infected_infectious]
+        infected_infectiousAt_list = [infected_infectiousAt_list[i] for i in range(0, len(infected_infectiousAt_list))
+                                     if i not in to_trans_infected_infectious]
+
+        to_trans_infectious_recovered = []
+        for u in range(0, len(infectiousList)):
+            if(infectious_recoveredAt_list[u] == day):
+                to_trans_infected_infectious.append(u)
+
+            elif(day < infectious_recoveredAt_list[u]):
+                infectiousUs.append(infectiousList[u])
+
+        for transU in to_trans_infectious_recovered:
+            recoveredList.append(infectiousList[transU])
+
+        infectiousList = [infectiousList[i] for i in range(0, len(infectiousList)) if
+                        i not in to_trans_infectious_recovered]
+        infectious_recoveredAt_list = [infectious_recoveredAt_list[i] for i in range(0, len(infectious_recoveredAt_list))
+                                     if i not in to_trans_infectious_recovered]
+
+
+        # for i in range(len(Status)):
+        #     if((Status[i] == 'Infected') & (day == Status_InfectiousAt[i])): # Enter infectious period
+        #         Status[i] = 'Infectious'
+        #         infectiousUs.append(Status_UsID[i])
+        #         infectiousList.append(Status_UsID[i])
+        #     elif((Status[i] == 'Infectious')):
+        #         if(day == Status_RecoverAt[i]): # Enter Recovered period
+        #             Status[i] = 'Recovered'
+        #         elif(day < Status_RecoverAt[i]): # Count as a infector
+        #             infectiousUs.append(Status_UsID[i])
 
         # Simulate the network
         LinkDf = pd.read_csv(inputNetworksPrefix + str(day) + '.csv', names=['HostID','NbID','HSt','HEnd','NbSt','NbEnd'])
@@ -48,18 +111,29 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
         for infectiousID in infectiousUs:
             # Get the link when the susceptible, as a neighbor, contact with the infected
             contactRows_Host = LinkDf.loc[LinkDf['HostID'] == infectiousID]['NbID'].tolist()
-            HSt_Host = LinkDf.loc[LinkDf['HostID'] == infectiousID]['HSt'].tolist()
-            HEnd_Host = LinkDf.loc[LinkDf['HostID'] == infectiousID]['HEnd'].tolist()
-            NbSt_Host = LinkDf.loc[LinkDf['HostID'] == infectiousID]['NbSt'].tolist()
-            NbEnd_Host = LinkDf.loc[LinkDf['HostID'] == infectiousID]['NbEnd'].tolist()
+            contactRows_Host = [sus for sus in contactRows_Host if
+                                (sus not in recoveredList) &
+                                (sus not in infectedList) &
+                                (sus not in infectiousList)
+                                ]
+            # HSt_Host = LinkDf.loc[(LinkDf['HostID'] == infectiousID)]['HSt'].tolist()
+            HSt_Host = LinkDf[(LinkDf['HostID'] == infectiousID) & (LinkDf['NbID'].isin(contactRows_Host))]['HSt'].tolist()
+
+            HEnd_Host = LinkDf[(LinkDf['HostID'] == infectiousID) & (LinkDf['NbID'].isin(contactRows_Host))]['HEnd'].tolist()
+            NbSt_Host = LinkDf[(LinkDf['HostID'] == infectiousID) & (LinkDf['NbID'].isin(contactRows_Host))]['NbSt'].tolist()
+            NbEnd_Host = LinkDf[(LinkDf['HostID'] == infectiousID) & (LinkDf['NbID'].isin(contactRows_Host))]['NbEnd'].tolist()
 
             # Get the link when the susceptible, as a host, contact with the infected
             contactRows_Nb = LinkDf.loc[LinkDf['NbID'] == infectiousID]['HostID'].tolist()
-            HSt_Nb = LinkDf.loc[LinkDf['NbID'] == infectiousID]['HSt'].tolist()
-            HEnd_Nb = LinkDf.loc[LinkDf['NbID'] == infectiousID]['HEnd'].tolist()
-            NbSt_Nb = LinkDf.loc[LinkDf['NbID'] == infectiousID]['NbSt'].tolist()
-            NbEnd_Nb = LinkDf.loc[LinkDf['NbID'] == infectiousID]['NbEnd'].tolist()
-
+            contactRows_Nb = [sus for sus in contactRows_Nb if
+                                (sus not in recoveredList) &
+                                (sus not in infectedList) &
+                                (sus not in infectiousList)
+                                ]
+            HSt_Nb = LinkDf[(LinkDf['NbID'] == infectiousID) & (LinkDf['HostID'].isin(contactRows_Nb))]['HSt'].tolist()
+            HEnd_Nb = LinkDf[(LinkDf['NbID'] == infectiousID) & (LinkDf['HostID'].isin(contactRows_Nb))]['HEnd'].tolist()
+            NbSt_Nb = LinkDf[(LinkDf['NbID'] == infectiousID) & (LinkDf['HostID'].isin(contactRows_Nb))]['NbSt'].tolist()
+            NbEnd_Nb = LinkDf[(LinkDf['NbID'] == infectiousID) & (LinkDf['HostID'].isin(contactRows_Nb))]['NbEnd'].tolist()
 
             # Initialize the exposure dictionary
             for j in range(0, len(contactRows_Host)):
@@ -90,27 +164,44 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
                 prob = calculateTransProbability(exposure_dict[susceptibleId], r_value)
                 # print(prob)
                 temp_prob = np.random.binomial(1,prob)
+                if (temp_prob > 0):
+                    nOfInfection += 1
+                    incubation = round(np.random.lognormal(mean=1.621,
+                                                           sigma=0.418
+                                                           ))
 
-                if(temp_prob > 0 ):
-                    nbIndex = Status_UsID.index(susceptibleId)
-                    nbStatus = Status[nbIndex]
-                    if (nbStatus == 'Susceptible'):
-                        nOfInfection += 1
-
-                        # Incubation period
+                    while (incubation < 3):
                         incubation = round(np.random.lognormal(mean=1.621,
                                                                sigma=0.418
                                                                ))
+                    infectiousAt = day + incubation - 3  # The day Infected become Infectious
+                    recoverAt = day + incubation + 8  # The day Infectious become recovered
 
-                        while (incubation < 3):
-                            incubation = round(np.random.lognormal(mean=1.621,
-                                                                   sigma=0.418
-                                                                   ))
-                        infectiousAt = day + incubation - 3 # The day Infected become Infectious
-                        recoverAt = day + incubation + 8 # The day Infectious become recovered
-                        Status[nbIndex] = 'Infected'
-                        Status_InfectiousAt[nbIndex] = infectiousAt
-                        Status_RecoverAt[nbIndex] = recoverAt
+                    infectedList.append(susceptibleId)
+                    infected_infectiousAt_list.append(infectiousAt)
+                    infected_recoveredAt_list.append(recoverAt)
+
+
+                # if(temp_prob > 0 ):
+                #     nbIndex = Status_UsID.index(susceptibleId)
+                #     nbStatus = Status[nbIndex]
+                #     if (nbStatus == 'Susceptible'):
+                #         nOfInfection += 1
+                #
+                #         # Incubation period
+                #         incubation = round(np.random.lognormal(mean=1.621,
+                #                                                sigma=0.418
+                #                                                ))
+                #
+                #         while (incubation < 3):
+                #             incubation = round(np.random.lognormal(mean=1.621,
+                #                                                    sigma=0.418
+                #                                                    ))
+                #         infectiousAt = day + incubation - 3 # The day Infected become Infectious
+                #         recoverAt = day + incubation + 8 # The day Infectious become recovered
+                #         Status[nbIndex] = 'Infected'
+                #         Status_InfectiousAt[nbIndex] = infectiousAt
+                #         Status_RecoverAt[nbIndex] = recoverAt
 
         # print('Day ' + str(day) + ': Finished')
         # print()
@@ -122,9 +213,7 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
     return [nOfInfection, node]
 
 
-import concurrent.futures
 import time
-import threading
 import multiprocessing as mp
 
 
@@ -142,47 +231,48 @@ def log_result(result):
 # This is for running the simulations
 def runSim_DDT(seedIndex, method, percent, r_value, k):
     fileName = ''
-    if(percent == 0):
-        fileName = 'initialStatus_noVacc.csv'
-    elif(percent == 0.2):
-        fileName = 'initialStatus_point2.csv'
-    elif(percent == 0.4):
-        fileName = 'initialStatus_point4.csv'
-    elif (percent == 0.6):
-        fileName = 'initialStatus_point6.csv'
-    elif (percent == 0.8):
-        fileName = 'initialStatus_point8.csv'
-    elif (percent == 1):
-        fileName = 'initialStatus_1.csv'
-    elif (percent == 1.2):
-        fileName = 'initialStatus_1point2.csv'
-    elif (percent == 1.4):
-        fileName = 'initialStatus_1point4.csv'
-    elif (percent == 1.6):
-        fileName = 'initialStatus_1point6.csv'
-    elif (percent == 1.8):
-        fileName = 'initialStatus_1point8.csv'
-    elif (percent == 2):
-        fileName = 'initialStatus_2.csv'
-    elif(percent == 2.2):
-        fileName = 'initialStatus_2point2.csv'
+    rankingFile = ''
 
-    result = 0
+    if (method == 'DV'):
+        rankingFile = 'ContactCount.csv'
+    elif(method =='IMV'):
+        rankingFile = 'DDT-IMVranking.csv'
 
-    if k is None:
-        result = runSimulation_PreEmptive(inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
-                                       inputStatusFile=f'./Pre-emptive/{method}/{fileName}',
+    # if(percent == 0):
+    #     fileName = 'initialStatus_noVacc.csv'
+    # elif(percent == 0.2):
+    #     fileName = 'initialStatus_point2.csv'
+    # elif(percent == 0.4):
+    #     fileName = 'initialStatus_point4.csv'
+    # elif (percent == 0.6):
+    #     fileName = 'initialStatus_point6.csv'
+    # elif (percent == 0.8):
+    #     fileName = 'initialStatus_point8.csv'
+    # elif (percent == 1):
+    #     fileName = 'initialStatus_1.csv'
+    # elif (percent == 1.2):
+    #     fileName = 'initialStatus_1point2.csv'
+    # elif (percent == 1.4):
+    #     fileName = 'initialStatus_1point4.csv'
+    # elif (percent == 1.6):
+    #     fileName = 'initialStatus_1point6.csv'
+    # elif (percent == 1.8):
+    #     fileName = 'initialStatus_1point8.csv'
+    # elif (percent == 2):
+    #     fileName = 'initialStatus_2.csv'
+    # elif(percent == 2.2):
+    #     fileName = 'initialStatus_2point2.csv'
+    # else:
+    #     fileName = f'initialStatus_{percent}.csv'
+
+    result = runSimulation_PreEmptive(inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
+                                      rankingFile= f'./Ranking/{rankingFile}',
+                                      vaccPercent=percent,
+                                      missingPercent= k,
                                       r_value=r_value,
                                       seedIndex=seedIndex,
-                                       START_DAY = 7,
-                                       END_DAY =32)
-    else:
-        result = runSimulation_PreEmptive(inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
-                                          inputStatusFile=f'./Pre-emptive/MissingK/{k}/{method}/{fileName}',
-                                          r_value=r_value,
-                                          seedIndex=seedIndex,
-                                          START_DAY=7,
-                                          END_DAY=32)
+                                      START_DAY=7,
+                                      END_DAY=32)
 
     log = dict()
     log['result'] = result
@@ -237,13 +327,21 @@ class Executor:
 
 if __name__ == '__main__':
     start = time.perf_counter()
-    NUMBER_OF_SIMULATIONS = 1000
+    # result = runSimulation_PreEmptive(inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
+    #                                   rankingFile=f'./Ranking/ContactCount.csv',
+    #                                   vaccPercent=10,
+    #                                   missingPercent=5,
+    #                                   r_value=1,
+    #                                   seedIndex=10,
+    #                                   START_DAY=7,
+    #                                   END_DAY=32)
+    NUMBER_OF_SIMULATIONS = 2
 
-    methods = ['DV' ]
+    methods = ['DV']
     missing_k = [5]
-    percentages = [0.6, 0.8, 1, 1.2, 2]
+    percentages = [10]
     r_list = [1] #R value
-    num_workers = mp.cpu_count()
+    num_workers = mp.cpu_count() - 4
 
     for method in methods:
         for percent in percentages:
@@ -259,7 +357,7 @@ if __name__ == '__main__':
                     print(
                         f'Pre-emptive (DDT - {method} {percent}%, R value: {r_value}): '
                         f'Average outbreak size: {executor.result_list[0]/NUMBER_OF_SIMULATIONS} '
-                        f'Number of nodes: {executor.result_list[1]}\n '
+                        f'Number of nodes: {executor.result_list[1]}. '
                         f'Missing k: {k}%\n'
                         )
 
