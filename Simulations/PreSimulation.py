@@ -22,11 +22,11 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
 
     StatusDf = pd.read_csv('./initialStatus.csv')
     Status_UsID = StatusDf['UsID'].tolist()
-    # Status = StatusDf['Status'].tolist()
-    # Status_InfectiousAt = StatusDf['InfectiousAt'].tolist()
-    # Status_RecoverAt = StatusDf['RecoverAt'].tolist()
-    # Status[r] = 'Infectious'
-    # Status_RecoverAt[r] = END_DAY
+    Status = StatusDf['Status'].tolist()
+    Status_InfectiousAt = StatusDf['InfectiousAt'].tolist()
+    Status_RecoverAt = StatusDf['RecoverAt'].tolist()
+    Status[seedIndex] = 'Infectious'
+    Status_RecoverAt[seedIndex] = END_DAY
     nOfInfection = 1
     node = 0
 
@@ -38,15 +38,20 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
 
     recoveredList = countList[nOfMissing:nOfVacc + nOfMissing]
 
-    infectedList = []
-    infected_infectiousAt_list = []
-    infected_recoveredAt_list = []
+    # for r in recoveredList:
+    #     recoverIndex = Status_UsID.index(r)
+    #     Status[recoverIndex] = 'Recovered'
 
-    infectiousList = []
-    infectious_recoveredAt_list = []
 
-    infectiousList.append(Status_UsID[seedIndex])
-    infectious_recoveredAt_list.append(END_DAY)
+    # infectedList = []
+    # infected_infectiousAt_list = []
+    # infected_recoveredAt_list = []
+    #
+    # infectiousList = []
+    # infectious_recoveredAt_list = []
+    #
+    # infectiousList.append(Status_UsID[seedIndex])
+    # infectious_recoveredAt_list.append(END_DAY)
 
     #----- Run simulation day by day -----#
     for day in range(START_DAY, END_DAY):
@@ -57,51 +62,51 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
 
         infectiousUs = []
 
-        to_trans_infected_infectious = []
-        for i in  range(0, len(infectedList)):
-            if(infected_infectiousAt_list[i] == day):
-                to_trans_infected_infectious.append(i)
-        # print(infectedList)
-        # print(infectiousList)
-        # print(to_trans_infected_infectious)
+        # to_trans_infected_infectious = []
+        # for i in  range(0, len(infectedList)):
+        #     if(infected_infectiousAt_list[i] == day):
+        #         to_trans_infected_infectious.append(i)
+        # # print(infectedList)
+        # # print(infectiousList)
+        # # print(to_trans_infected_infectious)
+        #
+        # for transI in to_trans_infected_infectious:
+        #     infectiousList.append(infectedList[transI])
+        #     infectious_recoveredAt_list.append(infected_recoveredAt_list[transI])
+        #
+        # infectedList = [infectedList[i] for i in range(0,len(infectedList)) if i not in to_trans_infected_infectious]
+        # infected_recoveredAt_list = [infected_recoveredAt_list[i] for i in range(0, len(infected_recoveredAt_list))
+        #                              if i not in to_trans_infected_infectious]
+        # infected_infectiousAt_list = [infected_infectiousAt_list[i] for i in range(0, len(infected_infectiousAt_list))
+        #                              if i not in to_trans_infected_infectious]
+        #
+        # to_trans_infectious_recovered = []
+        # for u in range(0, len(infectiousList)):
+        #     if(infectious_recoveredAt_list[u] == day):
+        #         to_trans_infected_infectious.append(u)
+        #
+        #     elif(day < infectious_recoveredAt_list[u]):
+        #         infectiousUs.append(infectiousList[u])
+        #
+        # for transU in to_trans_infectious_recovered:
+        #     recoveredList.append(infectiousList[transU])
+        #
+        # infectiousList = [infectiousList[i] for i in range(0, len(infectiousList)) if
+        #                 i not in to_trans_infectious_recovered]
+        # infectious_recoveredAt_list = [infectious_recoveredAt_list[i] for i in range(0, len(infectious_recoveredAt_list))
+        #                              if i not in to_trans_infectious_recovered]
 
-        for transI in to_trans_infected_infectious:
-            infectiousList.append(infectedList[transI])
-            infectious_recoveredAt_list.append(infected_recoveredAt_list[transI])
-
-        infectedList = [infectedList[i] for i in range(0,len(infectedList)) if i not in to_trans_infected_infectious]
-        infected_recoveredAt_list = [infected_recoveredAt_list[i] for i in range(0, len(infected_recoveredAt_list))
-                                     if i not in to_trans_infected_infectious]
-        infected_infectiousAt_list = [infected_infectiousAt_list[i] for i in range(0, len(infected_infectiousAt_list))
-                                     if i not in to_trans_infected_infectious]
-
-        to_trans_infectious_recovered = []
-        for u in range(0, len(infectiousList)):
-            if(infectious_recoveredAt_list[u] == day):
-                to_trans_infected_infectious.append(u)
-
-            elif(day < infectious_recoveredAt_list[u]):
-                infectiousUs.append(infectiousList[u])
-
-        for transU in to_trans_infectious_recovered:
-            recoveredList.append(infectiousList[transU])
-
-        infectiousList = [infectiousList[i] for i in range(0, len(infectiousList)) if
-                        i not in to_trans_infectious_recovered]
-        infectious_recoveredAt_list = [infectious_recoveredAt_list[i] for i in range(0, len(infectious_recoveredAt_list))
-                                     if i not in to_trans_infectious_recovered]
-
-
-        # for i in range(len(Status)):
-        #     if((Status[i] == 'Infected') & (day == Status_InfectiousAt[i])): # Enter infectious period
-        #         Status[i] = 'Infectious'
-        #         infectiousUs.append(Status_UsID[i])
-        #         infectiousList.append(Status_UsID[i])
-        #     elif((Status[i] == 'Infectious')):
-        #         if(day == Status_RecoverAt[i]): # Enter Recovered period
-        #             Status[i] = 'Recovered'
-        #         elif(day < Status_RecoverAt[i]): # Count as a infector
-        #             infectiousUs.append(Status_UsID[i])
+        for i in range(len(Status)):
+            if((Status[i] == 'Infected') & (day == Status_InfectiousAt[i])): # Enter infectious period
+                Status[i] = 'Infectious'
+                infectiousUs.append(Status_UsID[i])
+                # infectiousList.append(Status_UsID[i])
+            elif((Status[i] == 'Infectious')):
+                if(day == Status_RecoverAt[i]): # Enter Recovered period
+                    recoveredList.append(Status_UsID[i])
+                    Status[i] = 'Recovered'
+                elif(day < Status_RecoverAt[i]): # Count as a infector
+                    infectiousUs.append(Status_UsID[i])
 
         # Simulate the network
         LinkDf = pd.read_csv(inputNetworksPrefix + str(day) + '.csv', names=['HostID','NbID','HSt','HEnd','NbSt','NbEnd'])
@@ -111,29 +116,29 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
         for infectiousID in infectiousUs:
             # Get the link when the susceptible, as a neighbor, contact with the infected
             contactRows_Host = LinkDf.loc[LinkDf['HostID'] == infectiousID]['NbID'].tolist()
-            contactRows_Host = [sus for sus in contactRows_Host if
-                                (sus not in recoveredList) &
-                                (sus not in infectedList) &
-                                (sus not in infectiousList)
-                                ]
+            # contactRows_Host = [sus for sus in contactRows_Host if
+            #                     (sus not in recoveredList) &
+            #                     (sus not in infectedList) &
+            #                     (sus not in infectiousList)
+            #                     ]
             # HSt_Host = LinkDf.loc[(LinkDf['HostID'] == infectiousID)]['HSt'].tolist()
-            HSt_Host = LinkDf[(LinkDf['HostID'] == infectiousID) & (LinkDf['NbID'].isin(contactRows_Host))]['HSt'].tolist()
+            HSt_Host = LinkDf[(LinkDf['HostID'] == infectiousID)]['HSt'].tolist()
 
-            HEnd_Host = LinkDf[(LinkDf['HostID'] == infectiousID) & (LinkDf['NbID'].isin(contactRows_Host))]['HEnd'].tolist()
-            NbSt_Host = LinkDf[(LinkDf['HostID'] == infectiousID) & (LinkDf['NbID'].isin(contactRows_Host))]['NbSt'].tolist()
-            NbEnd_Host = LinkDf[(LinkDf['HostID'] == infectiousID) & (LinkDf['NbID'].isin(contactRows_Host))]['NbEnd'].tolist()
+            HEnd_Host = LinkDf[(LinkDf['HostID'] == infectiousID)]['HEnd'].tolist()
+            NbSt_Host = LinkDf[(LinkDf['HostID'] == infectiousID)]['NbSt'].tolist()
+            NbEnd_Host = LinkDf[(LinkDf['HostID'] == infectiousID)]['NbEnd'].tolist()
 
             # Get the link when the susceptible, as a host, contact with the infected
             contactRows_Nb = LinkDf.loc[LinkDf['NbID'] == infectiousID]['HostID'].tolist()
-            contactRows_Nb = [sus for sus in contactRows_Nb if
-                                (sus not in recoveredList) &
-                                (sus not in infectedList) &
-                                (sus not in infectiousList)
-                                ]
-            HSt_Nb = LinkDf[(LinkDf['NbID'] == infectiousID) & (LinkDf['HostID'].isin(contactRows_Nb))]['HSt'].tolist()
-            HEnd_Nb = LinkDf[(LinkDf['NbID'] == infectiousID) & (LinkDf['HostID'].isin(contactRows_Nb))]['HEnd'].tolist()
-            NbSt_Nb = LinkDf[(LinkDf['NbID'] == infectiousID) & (LinkDf['HostID'].isin(contactRows_Nb))]['NbSt'].tolist()
-            NbEnd_Nb = LinkDf[(LinkDf['NbID'] == infectiousID) & (LinkDf['HostID'].isin(contactRows_Nb))]['NbEnd'].tolist()
+            # contactRows_Nb = [sus for sus in contactRows_Nb if
+            #                     (sus not in recoveredList) &
+            #                     (sus not in infectedList) &
+            #                     (sus not in infectiousList)
+            #                     ]
+            HSt_Nb = LinkDf[(LinkDf['NbID'] == infectiousID)]['HSt'].tolist()
+            HEnd_Nb = LinkDf[(LinkDf['NbID'] == infectiousID)]['HEnd'].tolist()
+            NbSt_Nb = LinkDf[(LinkDf['NbID'] == infectiousID) ]['NbSt'].tolist()
+            NbEnd_Nb = LinkDf[(LinkDf['NbID'] == infectiousID) ]['NbEnd'].tolist()
 
             # Initialize the exposure dictionary
             for j in range(0, len(contactRows_Host)):
@@ -164,48 +169,47 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
                 prob = calculateTransProbability(exposure_dict[susceptibleId], r_value)
                 # print(prob)
                 temp_prob = np.random.binomial(1,prob)
-                if (temp_prob > 0):
-                    nOfInfection += 1
-                    incubation = round(np.random.lognormal(mean=1.621,
-                                                           sigma=0.418
-                                                           ))
-
-                    while (incubation < 3):
-                        incubation = round(np.random.lognormal(mean=1.621,
-                                                               sigma=0.418
-                                                               ))
-                    infectiousAt = day + incubation - 3  # The day Infected become Infectious
-                    recoverAt = day + incubation + 8  # The day Infectious become recovered
-
-                    infectedList.append(susceptibleId)
-                    infected_infectiousAt_list.append(infectiousAt)
-                    infected_recoveredAt_list.append(recoverAt)
-
-
-                # if(temp_prob > 0 ):
-                #     nbIndex = Status_UsID.index(susceptibleId)
-                #     nbStatus = Status[nbIndex]
-                #     if (nbStatus == 'Susceptible'):
-                #         nOfInfection += 1
+                # if (temp_prob > 0):
+                #     nOfInfection += 1
+                #     incubation = round(np.random.lognormal(mean=1.621,
+                #                                            sigma=0.418
+                #                                            ))
                 #
-                #         # Incubation period
+                #     while (incubation < 3):
                 #         incubation = round(np.random.lognormal(mean=1.621,
                 #                                                sigma=0.418
                 #                                                ))
+                #     infectiousAt = day + incubation - 3  # The day Infected become Infectious
+                #     recoverAt = day + incubation + 8  # The day Infectious become recovered
                 #
-                #         while (incubation < 3):
-                #             incubation = round(np.random.lognormal(mean=1.621,
-                #                                                    sigma=0.418
-                #                                                    ))
-                #         infectiousAt = day + incubation - 3 # The day Infected become Infectious
-                #         recoverAt = day + incubation + 8 # The day Infectious become recovered
-                #         Status[nbIndex] = 'Infected'
-                #         Status_InfectiousAt[nbIndex] = infectiousAt
-                #         Status_RecoverAt[nbIndex] = recoverAt
+                #     infectedList.append(susceptibleId)
+                #     infected_infectiousAt_list.append(infectiousAt)
+                #     infected_recoveredAt_list.append(recoverAt)
+
+
+                if(temp_prob > 0 ):
+                    nbIndex = Status_UsID.index(susceptibleId)
+                    nbStatus = Status[nbIndex]
+                    if ((nbStatus == 'Susceptible' ) & (susceptibleId not in recoveredList)):
+                        nOfInfection += 1
+
+                        # Incubation period
+                        incubation = round(np.random.lognormal(mean=1.621,
+                                                               sigma=0.418
+                                                               ))
+
+                        while (incubation < 3):
+                            incubation = round(np.random.lognormal(mean=1.621,
+                                                                   sigma=0.418
+                                                                   ))
+                        infectiousAt = day + incubation - 3 # The day Infected become Infectious
+                        recoverAt = day + incubation + 8 # The day Infectious become recovered
+                        Status[nbIndex] = 'Infected'
+                        Status_InfectiousAt[nbIndex] = infectiousAt
+                        Status_RecoverAt[nbIndex] = recoverAt
 
         # print('Day ' + str(day) + ': Finished')
         # print()
-
     if(nOfInfection > 100):
         node = 1 # If the node caused more than 100 infections
 
@@ -335,6 +339,9 @@ if __name__ == '__main__':
     #                                   seedIndex=10,
     #                                   START_DAY=7,
     #                                   END_DAY=32)
+    # print(result)
+
+
     NUMBER_OF_SIMULATIONS = 2
 
     methods = ['DV']
