@@ -57,7 +57,7 @@ class PreEmptiveStatus:
         UserId = df['UsID'].tolist()
         Status = df['Status'].tolist()
         nToVaccinate = int(proportion * len(UserId))
-        pInfectionProtection = 0.038 # 3.8% effective in protecting against infection
+        pInfectionProtection = 1 # 3.8% effective in protecting against infection
 
 
         ##  Comment and uncomment each of these section below for different strategy
@@ -140,8 +140,8 @@ if __name__ == '__main__':
 
     ################### Generating Initial Status with RV strategy file #################
     DDTStatus.generateRVStatus(initialStatusFile="./output/Pre-emptive/DDT/initialStatus.csv",
-                               outputFile="./output/Pre-emptive/DDT/MissingK/DV/5/initialStatus_1point2.csv",
-                               proportion = 0.012,
+                               outputFile="../Simulations/Pre-emptive/MissingK/DV/5/initialStatus_2.csv",
+                               proportion = 0.02,
                                k = 0.05
                                )
     
