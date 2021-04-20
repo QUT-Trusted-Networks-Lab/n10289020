@@ -37,7 +37,6 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
     countList = ranking['UsID'].tolist()
 
     recoveredList = countList[nOfMissing:nOfVacc + nOfMissing]
-
     # for r in recoveredList:
     #     recoverIndex = Status_UsID.index(r)
     #     Status[recoverIndex] = 'Recovered'
@@ -58,7 +57,6 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
         exposure_dict = dict()
         # print('Day '+ str(day) + ": Begin")
         # Check and Update the Status everyday
-
 
         infectiousUs = []
 
@@ -191,6 +189,7 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
                     nbIndex = Status_UsID.index(susceptibleId)
                     nbStatus = Status[nbIndex]
                     if ((nbStatus == 'Susceptible' ) & (susceptibleId not in recoveredList)):
+                        print(susceptibleId)
                         nOfInfection += 1
 
                         # Incubation period
@@ -331,42 +330,42 @@ class Executor:
 
 if __name__ == '__main__':
     start = time.perf_counter()
-    # result = runSimulation_PreEmptive(inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
-    #                                   rankingFile=f'./Ranking/ContactCount.csv',
-    #                                   vaccPercent=10,
-    #                                   missingPercent=5,
-    #                                   r_value=1,
-    #                                   seedIndex=10,
-    #                                   START_DAY=7,
-    #                                   END_DAY=32)
-    # print(result)
+    result = runSimulation_PreEmptive(inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
+                                      rankingFile=f'./Ranking/ContactCount.csv',
+                                      vaccPercent=60,
+                                      missingPercent=5,
+                                      r_value=1,
+                                      seedIndex=10,
+                                      START_DAY=7,
+                                      END_DAY=32)
+    print(result)
 
 
-    NUMBER_OF_SIMULATIONS = 2
-
-    methods = ['DV']
-    missing_k = [5]
-    percentages = [10]
-    r_list = [1] #R value
-    num_workers = mp.cpu_count() - 4
-
-    for method in methods:
-        for percent in percentages:
-            for r_value in r_list:
-                for k in missing_k:
-                    exclude = []
-                    executor = Executor(num_workers)
-                    for i in range(NUMBER_OF_SIMULATIONS):
-                        seedIndex = exclude_random(exclude, 364544) # 364544 is the number of users in the network
-                        exclude.append(seedIndex) # we dont want to run the same seed node again
-                        executor.schedule(runSim_DDT, (seedIndex, method, percent, r_value, k))
-                    executor.wait()
-                    print(
-                        f'Pre-emptive (DDT - {method} {percent}%, R value: {r_value}): '
-                        f'Average outbreak size: {executor.result_list[0]/NUMBER_OF_SIMULATIONS} '
-                        f'Number of nodes: {executor.result_list[1]}. '
-                        f'Missing k: {k}%\n'
-                        )
+    # NUMBER_OF_SIMULATIONS = 2
+    #
+    # methods = ['DV']
+    # missing_k = [5]
+    # percentages = [10]
+    # r_list = [1] #R value
+    # num_workers = mp.cpu_count() - 4
+    #
+    # for method in methods:
+    #     for percent in percentages:
+    #         for r_value in r_list:
+    #             for k in missing_k:
+    #                 exclude = []
+    #                 executor = Executor(num_workers)
+    #                 for i in range(NUMBER_OF_SIMULATIONS):
+    #                     seedIndex = exclude_random(exclude, 364544) # 364544 is the number of users in the network
+    #                     exclude.append(seedIndex) # we dont want to run the same seed node again
+    #                     executor.schedule(runSim_DDT, (seedIndex, method, percent, r_value, k))
+    #                 executor.wait()
+    #                 print(
+    #                     f'Pre-emptive (DDT - {method} {percent}%, R value: {r_value}): '
+    #                     f'Average outbreak size: {executor.result_list[0]/NUMBER_OF_SIMULATIONS} '
+    #                     f'Number of nodes: {executor.result_list[1]}. '
+    #                     f'Missing k: {k}%\n'
+    #                     )
 
     finish = time.perf_counter()
     print(f'Finished in {round(finish - start, 2)} second(s).')
