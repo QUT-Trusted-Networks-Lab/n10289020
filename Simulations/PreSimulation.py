@@ -17,9 +17,6 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
                              END_DAY = 32, # Change to simulate at a bigger scale,
                             ):
 
-
-
-
     StatusDf = pd.read_csv('./initialStatus.csv')
     Status_UsID = StatusDf['UsID'].tolist()
     Status = StatusDf['Status'].tolist()
@@ -32,6 +29,7 @@ def runSimulation_PreEmptive(inputNetworksPrefix,
 
     # Vaccinate
     ranking = pd.read_csv(rankingFile)
+    ranking = ranking.sort_values(['Rank'], ascending=False)
     nOfVacc = int(vaccPercent/100 * len(Status_UsID))
     nOfMissing = int(missingPercent/100 * len(Status_UsID))
     countList = ranking['UsID'].tolist()
@@ -332,7 +330,7 @@ class Executor:
 if __name__ == '__main__':
     start = time.perf_counter()
     # result = runSimulation_PreEmptive(inputNetworksPrefix='../Data/SPDTNetwork/DDT/bclink_',
-    #                                   rankingFile=f'./Ranking/ContactCount.csv',
+    #                                   rankingFile=f'./Ranking/DDT-IMVranking.csv',
     #                                   vaccPercent=10,
     #                                   missingPercent=5,
     #                                   r_value=1,
@@ -342,13 +340,13 @@ if __name__ == '__main__':
     # print(result)
 
 
-    NUMBER_OF_SIMULATIONS = 2
+    NUMBER_OF_SIMULATIONS = 1000
 
-    methods = ['DV']
-    missing_k = [5]
-    percentages = [10]
+    methods = ['IMV']
+    missing_k = [0.5]
+    percentages = [15,20,25]
     r_list = [1] #R value
-    num_workers = mp.cpu_count() - 4
+    num_workers = mp.cpu_count()
 
     for method in methods:
         for percent in percentages:
